@@ -1,0 +1,264 @@
+---
+title: "Error Responses and Status Codes"
+sidebarTitle: "Errors"
+description: "Reference for all HTTP error codes returned by Koax Anime API, including error object structure and how to handle each error type."
+---
+
+The Koax Anime API uses conventional HTTP status codes to signal the outcome of every request. Whenever a request fails, the response body contains a structured `error` object — never a plain text message or an HTML error page — so your application can parse and handle failures programmatically without brittle string matching. The same error shape is used across all endpoints, making it straightforward to write a single, centralized error handler.
+
+## Error Response Format
+
+All error responses share a consistent JSON envelope. The `code` field is a machine-readable string constant you can use in your code, the `message` field is a human-readable description suitable for logging, and `status` mirrors the HTTP status code for convenience when you're working with deserialized objects.
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Anime with id 99999 not found",
+    "status": 404
+  }
+}
+```
+
+<ResponseField name="error" type="object" required>
+  Top-level error container.
+
+  <Expandable title="error fields">
+    <ResponseField name="code" type="string" required>
+      Machine-readable error constant (e.g. `NOT_FOUND`, `RATE_LIMITED`). Use this field in `switch` statements or error-handling logic rather than the human-readable `message`.
+    </ResponseField>
+
+    <ResponseField name="message" type="string" required>
+      Human-readable description of what went wrong. Suitable for logging and debugging but not guaranteed to remain stable across API versions — do not match on this string in code.
+    </ResponseField>
+
+    <ResponseField name="status" type="integer" required>
+      HTTP status code repeated inside the body for convenience.
+    </ResponseField>
+
+    <ResponseField name="errors" type="array">
+      Present only on `422 VALIDATION_ERROR` responses. An array of field-level validation failures, each with `field` (string) and `message` (string) properties.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## HTTP Status Codes
+
+The table below lists every status code the API may return, along with its `code` constant and a brief explanation of when you'll encounter it.
+
+| Status | Code | Meaning |
+|---|---|---|
+| `200` | `OK` | Request succeeded. The response body contains the requested data. |
+| `400` | `BAD_REQUEST` | The request was malformed — e.g. an unrecognised query parameter or an invalid JSON body. |
+| `401` | `UNAUTHORIZED` | No API key was provided, or the key is invalid/revoked. |
+| `403` | `FORBIDDEN` | The API key is valid but your plan does not have permission to access this resource. |
+| `404` | `NOT_FOUND` | No resource exists at the requested path or with the requested ID. |
+| `422` | `VALIDATION_ERROR` | The request was understood but one or more parameters failed validation rules. |
+| `429` | `RATE_LIMITED` | You have exceeded your plan's per-minute or per-day request quota. |
+| `500` | `INTERNAL_ERROR` | An unexpected error occurred on the server. Try again after a short delay. |
+
+## Common Errors
+
+<Accordion title="401 Unauthorized — Missing or Invalid API Key">
+  You'll receive a `401` when the `Authorization` header is absent, malformed, or contains a key that has been revoked.
+
+  **What to check:**
+  - Confirm the header is formatted exactly as `Authorization: Bearer YOUR_API_KEY`. The word `Bearer` is case-sensitive and the space is required.
+  - Verify the key is active in your [dashboard](https://koax.dev/dashboard). Revoked or rolled keys immediately return `401`.
+  - Make sure you're not accidentally sending the key as a query parameter (`?api_key=...`) — the Koax API only accepts header-based authentication.
+
+  ```bash
+  # Correct
+  curl https://api.koax.dev/v1/anime \
+    -H "Authorization: Bearer kx_live_abc123..."
+
+  # Incorrect — missing "Bearer" prefix
+  curl https://api.koax.dev/v1/anime \
+    -H "Authorization: kx_live_abc123..."
+  ```
+</Accordion>
+
+<Accordion title="404 Not Found — Resource Does Not Exist">
+  A `404` means the server understood your request but found nothing at the specified path or ID. This is one of the most common errors when working with detail endpoints.
+
+  **What to check:**
+  - Double-check the resource ID. IDs are strings (e.g. `anime_20`), not plain integers — passing a bare integer will result in a 404.
+  - If you constructed the ID yourself, use a search endpoint first to retrieve the canonical ID from the API.
+  - Verify the endpoint path — for example, `/v1/anime/anime_20` not `/v1/animes/20`.
+
+  ```bash
+  # Correct — use the full string ID
+  curl https://api.koax.dev/v1/anime/anime_20 \
+    -H "Authorization: Bearer YOUR_API_KEY"
+
+  # Will 404 — bare integer not accepted
+  curl https://api.koax.dev/v1/anime/20 \
+    -H "Authorization: Bearer YOUR_API_KEY"
+  ```
+</Accordion>
+
+<Accordion title="422 Validation Error — Parameter Validation Failed">
+  A `422` is returned when the API understands your request but one or more parameter values are invalid — for example, `limit=200` (exceeds maximum) or `page=-1` (negative page number). The response body includes an `errors` array that identifies every failing field.
+
+  ```json
+  {
+    "error": {
+      "code": "VALIDATION_ERROR",
+      "message": "Request parameters failed validation",
+      "status": 422,
+      "errors": [
+        {
+          "field": "limit",
+          "message": "Must be between 1 and 50"
+        },
+        {
+          "field": "page",
+          "message": "Must be a positive integer"
+        }
+      ]
+    }
+  }
+  ```
+
+  Iterate over the `errors` array and correct each flagged field before retrying. Unlike `400 BAD_REQUEST`, a `422` always tells you precisely which parameters are problematic.
+</Accordion>
+
+<Accordion title="429 Rate Limited — Too Many Requests">
+  A `429` means you've exceeded your plan's quota — either the per-minute burst limit or the daily allowance. The response includes a `Retry-After` header containing the number of seconds until you may send the next request.
+
+  **What to do:**
+  - Read `Retry-After` and wait at least that many seconds before retrying.
+  - Do **not** retry immediately or in a tight loop — every failed retry still counts toward your per-minute limit.
+  - Monitor `X-RateLimit-Remaining` on previous responses to detect when you're approaching the limit before hitting it.
+
+  ```http
+  HTTP/1.1 429 Too Many Requests
+  Retry-After: 12
+  X-RateLimit-Limit: 1000
+  X-RateLimit-Remaining: 0
+  X-RateLimit-Reset: 1717027200
+  ```
+
+  See the [Rate Limits](/concepts/rate-limits) page for a full retry implementation with exponential back-off.
+</Accordion>
+
+## Error Handling Example
+
+The example below shows a robust JavaScript error handler that branches on `error.code`, surfaces validation details when present, and respects the `Retry-After` directive on 429 responses.
+
+<CodeGroup>
+
+```javascript JavaScript
+async function koaxRequest(path, options = {}) {
+  const response = await fetch(`https://api.koax.dev/v1${path}`, {
+    ...options,
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+  // Successful response — return parsed body
+  if (response.ok) {
+    return response.json();
+  }
+
+  // Parse the structured error body
+  const { error } = await response.json();
+
+  switch (error.code) {
+    case "UNAUTHORIZED":
+      throw new Error("Invalid API key. Check your credentials in the dashboard.");
+
+    case "NOT_FOUND":
+      throw new Error(`Resource not found: ${error.message}`);
+
+    case "VALIDATION_ERROR": {
+      const fieldErrors = error.errors
+        ?.map((e) => `  - ${e.field}: ${e.message}`)
+        .join("\n");
+      throw new Error(`Validation failed:\n${fieldErrors}`);
+    }
+
+    case "RATE_LIMITED": {
+      const retryAfter = parseInt(response.headers.get("Retry-After") ?? "5");
+      console.warn(`Rate limited. Waiting ${retryAfter}s before retry...`);
+      await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
+      return koaxRequest(path, options); // Single automatic retry
+    }
+
+    case "INTERNAL_ERROR":
+      throw new Error("Koax API server error. Please try again in a moment.");
+
+    default:
+      throw new Error(`Unexpected error [${error.code}]: ${error.message}`);
+  }
+}
+
+// Usage
+try {
+  const anime = await koaxRequest("/anime/anime_20");
+  console.log(anime.title);
+} catch (err) {
+  console.error("Request failed:", err.message);
+}
+```
+
+```python Python
+import time
+import requests
+
+
+def koax_request(path, api_key, params=None, max_retries=1):
+    url = f"https://api.koax.dev/v1{path}"
+    headers = {"Authorization": f"Bearer {api_key}"}
+
+    for attempt in range(max_retries + 1):
+        response = requests.get(url, headers=headers, params=params)
+
+        if response.ok:
+            return response.json()
+
+        error = response.json().get("error", {})
+        code = error.get("code")
+        message = error.get("message", "Unknown error")
+
+        if code == "UNAUTHORIZED":
+            raise PermissionError("Invalid API key.")
+
+        elif code == "NOT_FOUND":
+            raise LookupError(f"Resource not found: {message}")
+
+        elif code == "VALIDATION_ERROR":
+            field_errors = "\n".join(
+                f"  - {e['field']}: {e['message']}"
+                for e in error.get("errors", [])
+            )
+            raise ValueError(f"Validation failed:\n{field_errors}")
+
+        elif code == "RATE_LIMITED" and attempt < max_retries:
+            retry_after = int(response.headers.get("Retry-After", 5))
+            print(f"Rate limited. Retrying in {retry_after}s...")
+            time.sleep(retry_after)
+            continue
+
+        else:
+            raise RuntimeError(f"[{code}] {message}")
+
+    raise RuntimeError("Max retries exceeded.")
+
+
+# Usage
+try:
+    anime = koax_request("/anime/anime_20", api_key="YOUR_API_KEY")
+    print(anime["title"])
+except Exception as e:
+    print(f"Request failed: {e}")
+```
+
+</CodeGroup>
+
+<Warning>
+  Never display the raw `message` string from an error response directly to end users in a production application. The message is intended for developer logs. Show your own user-friendly copy instead, and log the full error object server-side for debugging.
+</Warning>

@@ -1,0 +1,111 @@
+---
+title: "GET /genres/:id/anime — Anime by Genre"
+sidebarTitle: "Anime by Genre"
+description: "GET /genres/:id/anime — Retrieve all anime belonging to a specific genre, with pagination and sorting support."
+---
+
+The **Anime by Genre** endpoint returns a paginated list of all anime titles associated with a specific genre. This is the recommended way to build genre-browsing experiences, top-charts by category, or filtered recommendation feeds. Pass the genre `id` obtained from the [List Genres](/api-reference/genres/list) endpoint as a path parameter to get started.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/genres/:id/anime
+```
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique numeric ID of the genre. Retrieve available genre IDs from the [GET /genres](/api-reference/genres/list) endpoint.
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="page" type="integer" default="1">
+  Page number of the result set to return.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="25">
+  Number of anime titles to return per page. Maximum allowed value is **50**.
+</ParamField>
+
+<ParamField query="order_by" type="string">
+  Field to sort results by. Accepted values:
+
+  - `score` — Sort by average community score
+  - `title` — Sort alphabetically by title
+  - `aired` — Sort by original air date
+</ParamField>
+
+<ParamField query="sort" type="string">
+  Sort direction. Accepted values: `asc`, `desc`.
+</ParamField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.koax.dev/v1/genres/1/anime?order_by=score&sort=desc&limit=25" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "genre": {
+    "id": 1,
+    "name": "Action"
+  },
+  "data": [
+    {
+      "id": 5114,
+      "title": "Fullmetal Alchemist: Brotherhood",
+      "title_japanese": "鋼の錬金術師 FULLMETAL ALCHEMIST",
+      "image_url": "https://cdn.koax.dev/anime/5114.jpg",
+      "score": 9.10,
+      "episodes": 64,
+      "status": "Finished Airing",
+      "aired": "2009-04-05"
+    },
+    {
+      "id": 16498,
+      "title": "Shingeki no Kyojin",
+      "title_japanese": "進撃の巨人",
+      "image_url": "https://cdn.koax.dev/anime/16498.jpg",
+      "score": 8.54,
+      "episodes": 25,
+      "status": "Finished Airing",
+      "aired": "2013-04-07"
+    },
+    {
+      "id": 1535,
+      "title": "Death Note",
+      "title_japanese": "デスノート",
+      "image_url": "https://cdn.koax.dev/anime/1535.jpg",
+      "score": 8.62,
+      "episodes": 37,
+      "status": "Finished Airing",
+      "aired": "2006-10-04"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 153,
+    "per_page": 25,
+    "total": 3821,
+    "has_next_page": true
+  }
+}
+```
+
+</CodeGroup>
+
+<Tip>
+  Chain `order_by=score&sort=desc` to instantly surface the highest-rated titles in any genre — perfect for "Best of Genre" leaderboards or recommendation carousels. For example:
+
+  ```
+  GET https://api.koax.dev/v1/genres/1/anime?order_by=score&sort=desc
+  ```
+
+  Swap genre ID `1` (Action) for any ID from [GET /genres](/api-reference/genres/list) to replicate the pattern across every category.
+</Tip>

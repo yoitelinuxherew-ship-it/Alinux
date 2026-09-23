@@ -1,0 +1,110 @@
+---
+title: "GET /characters/search — Search Characters"
+sidebarTitle: "Search Characters"
+description: "GET /characters/search — Search for anime and manga characters by name, with support for partial matching and pagination."
+---
+
+The **Search Characters** endpoint allows you to find characters by name using partial or full string matching. Results are drawn from both anime and manga titles in the Koax database, making it ideal for powering autocomplete fields, character lookup features, or fan exploration tools. The query is matched against both the romanized name and the original Japanese name.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/characters/search
+```
+
+## Query Parameters
+
+<ParamField query="q" type="string" required>
+  The search term to match against character names. Supports partial matching — for example, `sakura` will match `Sakura Haruno`, `Sakura Kinomoto`, and others. Minimum 2 characters required.
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number of the result set to return.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="25">
+  Number of results to return per page. Maximum allowed value is **50**.
+</ParamField>
+
+<ParamField query="order_by" type="string">
+  Field to sort results by. Accepted values:
+
+  - `name` — Sort alphabetically by character name
+  - `favorites` — Sort by total number of user favorites
+</ParamField>
+
+<ParamField query="sort" type="string">
+  Sort direction. Accepted values: `asc`, `desc`.
+</ParamField>
+
+## Example Request
+
+```
+GET https://api.koax.dev/v1/characters/search?q=sakura
+```
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.koax.dev/v1/characters/search?q=sakura&order_by=favorites&sort=desc" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "data": [
+    {
+      "id": 686,
+      "name": "Sakura Haruno",
+      "name_kanji": "春野サクラ",
+      "image_url": "https://cdn.koax.dev/characters/686.jpg",
+      "favorites": 37842,
+      "anime": [
+        {
+          "id": 20,
+          "title": "Naruto",
+          "image_url": "https://cdn.koax.dev/anime/20.jpg",
+          "role": "Main"
+        },
+        {
+          "id": 1735,
+          "title": "Naruto: Shippuuden",
+          "image_url": "https://cdn.koax.dev/anime/1735.jpg",
+          "role": "Main"
+        }
+      ]
+    },
+    {
+      "id": 309,
+      "name": "Sakura Kinomoto",
+      "name_kanji": "木之本桜",
+      "image_url": "https://cdn.koax.dev/characters/309.jpg",
+      "favorites": 29103,
+      "anime": [
+        {
+          "id": 232,
+          "title": "Cardcaptor Sakura",
+          "image_url": "https://cdn.koax.dev/anime/232.jpg",
+          "role": "Main"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 3,
+    "per_page": 25,
+    "total": 61,
+    "has_next_page": true
+  }
+}
+```
+
+</CodeGroup>
+
+<Tip>
+  For more precise results, try searching using the Japanese **kanji or kana** form of a character's name. For example, querying `q=春野サクラ` will return exact matches for Sakura Haruno without surfacing unrelated characters who share a romanized name. This is especially useful when disambiguating characters from different series with similar English spellings.
+</Tip>

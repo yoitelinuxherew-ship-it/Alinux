@@ -1,30 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "Koax Anime API",
+  "projectType": "api-service",
+  "projectName": "Koax Anime API",
+  "projectDescription": "A RESTful API for accessing comprehensive anime, manga, characters, and related metadata.",
   "theme": "luma",
-  "colors": {
-    "primary": "#ef7025",
-    "light": "#eec9bc",
-    "dark": "#4fa1ab"
-  },
-  "favicon": "/favicon.svg",
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:support@koax.dev"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Get API Key",
-      "href": "https://koax.dev/signup"
-    }
-  },
+  "primaryColor": "#ef7025",
+  "lightColor": "#eec9bc",
+  "darkColor": "#4fa1ab",
   "navigation": {
     "tabs": [
       {
@@ -106,10 +87,32 @@
       }
     ]
   },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/koaxapi",
-      "github": "https://github.com/koaxapi"
-    }
-  }
+  "keyFeatures": [
+    "Comprehensive anime and manga metadata",
+    "Full-text search across titles, characters, and genres",
+    "Season-based browsing (current, upcoming, archive)",
+    "Character profiles and voice actor data",
+    "Genre and theme filtering",
+    "Pagination with cursor and offset support",
+    "Rate limiting with generous free tier",
+    "REST API with JSON responses"
+  ],
+  "publicApiSurface": [
+    "GET /anime",
+    "GET /anime/:id",
+    "GET /anime/search",
+    "GET /anime/top",
+    "GET /manga",
+    "GET /manga/:id",
+    "GET /manga/search",
+    "GET /manga/top",
+    "GET /characters",
+    "GET /characters/:id",
+    "GET /characters/search",
+    "GET /genres",
+    "GET /genres/:id/anime",
+    "GET /seasons/current",
+    "GET /seasons/upcoming",
+    "GET /seasons/:year/:season"
+  ]
 }

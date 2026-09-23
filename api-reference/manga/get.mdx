@@ -1,0 +1,157 @@
+---
+title: "GET /manga/:id — Fetch Manga Details"
+sidebarTitle: "Get Manga"
+description: "GET /manga/:id — Retrieve complete details for a single manga by its ID, including chapters, volumes, genres, and publication dates."
+---
+
+The `/manga/:id` endpoint returns the full detail record for a single manga title. The response includes bibliographic metadata, community scores, genre tags, author and artist credits, and precise publication date ranges. Use this endpoint whenever you need to display a complete manga profile.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/manga/:id
+```
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the manga. IDs are returned by the [List Manga](/api-reference/manga/list) and [Search Manga](/api-reference/manga/search) endpoints.
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  Unique identifier for the manga.
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  Primary romanized title.
+</ResponseField>
+
+<ResponseField name="title_english" type="string">
+  Official English-language title, if available.
+</ResponseField>
+
+<ResponseField name="title_japanese" type="string">
+  Native Japanese title in kanji/kana, if applicable.
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  Publication format: `Manga`, `Novel`, `One-shot`, `Doujin`, `Manhwa`, or `Manhua`.
+</ResponseField>
+
+<ResponseField name="chapters" type="integer | null">
+  Total number of chapters. Returns `null` for ongoing series where the final count is not yet known.
+</ResponseField>
+
+<ResponseField name="volumes" type="integer | null">
+  Total number of collected volumes. Returns `null` for ongoing series.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current serialization status: `publishing`, `finished`, `on_hiatus`, `discontinued`, or `not_yet_published`.
+</ResponseField>
+
+<ResponseField name="score" type="number">
+  Weighted community score on a scale of 0–10, based on member ratings.
+</ResponseField>
+
+<ResponseField name="rank" type="integer">
+  Global rank among all scored manga, ordered from highest to lowest score.
+</ResponseField>
+
+<ResponseField name="popularity" type="integer">
+  Popularity rank based on the number of users who have added the title to their list.
+</ResponseField>
+
+<ResponseField name="synopsis" type="string">
+  Plot summary or series description.
+</ResponseField>
+
+<ResponseField name="genres" type="array">
+  List of genre and theme tags associated with the manga.
+
+  <Expandable title="Genre object">
+    <ResponseField name="id" type="string">Genre identifier.</ResponseField>
+    <ResponseField name="name" type="string">Genre name (e.g. `Action`, `Fantasy`, `Romance`).</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="authors" type="array">
+  List of creators credited for this manga.
+
+  <Expandable title="Author object">
+    <ResponseField name="id" type="string">Author identifier.</ResponseField>
+    <ResponseField name="name" type="string">Author's full name.</ResponseField>
+    <ResponseField name="role" type="string">Creative role: `Story`, `Art`, or `Story & Art`.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="published" type="object">
+  Publication date range.
+
+  <Expandable title="Published object">
+    <ResponseField name="from" type="string">ISO 8601 date when serialization began (e.g. `1989-08-25`).</ResponseField>
+    <ResponseField name="to" type="string | null">ISO 8601 date when serialization ended. `null` if still ongoing.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="image_url" type="string">
+  URL of the manga's cover image hosted on the Koax CDN.
+</ResponseField>
+
+<Note>
+  `chapters` and `volumes` will be `null` for any manga that is currently serializing. Poll this endpoint periodically if you need up-to-date counts for ongoing titles.
+</Note>
+
+## Example
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.koax.dev/v1/manga/2" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "id": "2",
+  "title": "Berserk",
+  "title_english": "Berserk",
+  "title_japanese": "ベルセルク",
+  "type": "Manga",
+  "chapters": null,
+  "volumes": 41,
+  "status": "publishing",
+  "score": 9.47,
+  "rank": 1,
+  "popularity": 12,
+  "synopsis": "Guts, a former mercenary now known as the 'Black Swordsman,' is out for revenge. After a tumultuous childhood, he finally finds someone he respects and believes he can follow to the ends of the earth, but a charismatic Griffith soon leads him to a fate he never expected.",
+  "genres": [
+    { "id": "1", "name": "Action" },
+    { "id": "8", "name": "Drama" },
+    { "id": "10", "name": "Fantasy" },
+    { "id": "17", "name": "Horror" },
+    { "id": "37", "name": "Seinen" }
+  ],
+  "authors": [
+    {
+      "id": "1867",
+      "name": "Miura, Kentaro",
+      "role": "Story & Art"
+    },
+    {
+      "id": "4952",
+      "name": "Studio Gaga",
+      "role": "Art"
+    }
+  ],
+  "published": {
+    "from": "1989-08-25",
+    "to": null
+  },
+  "image_url": "https://cdn.koax.dev/manga/2/cover.jpg"
+}
+```
+
+</CodeGroup>

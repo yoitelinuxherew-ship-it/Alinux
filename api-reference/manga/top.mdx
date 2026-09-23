@@ -1,0 +1,134 @@
+---
+title: "GET /manga/top — Top-Rated Manga"
+sidebarTitle: "Top Manga"
+description: "GET /manga/top — Retrieve the highest-rated manga ranked by community score, filterable by type and ranking category."
+---
+
+The `/manga/top` endpoint returns manga ordered by descending community score, giving you a ranked list of the most acclaimed titles in the database. An optional `filter` parameter lets you scope the ranking to a specific format — such as novels, manhwa, or manhua — or switch to an alternative ranking method like popularity or all-time favorites. Use this endpoint to power leaderboards, featured carousels, or genre-specific top lists.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/manga/top
+```
+
+## Query Parameters
+
+<ParamField query="filter" type="string">
+  Narrows the ranking to a specific publication type or ranking methodology. Accepted values:
+
+  | Value | Description |
+  |-------|-------------|
+  | `manga` | Standard Japanese manga only |
+  | `novels` | Light novels and prose novels |
+  | `manhwa` | Korean comics only |
+  | `manhua` | Chinese comics only |
+  | `bypopularity` | Ranked by number of user list entries instead of score |
+  | `favorite` | Ranked by the number of times added to favorites |
+
+  When omitted, all publication types are included and ranked by score.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="25">
+  Number of results to return per page. Maximum value is `50`.
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number to retrieve, for paginating through the full ranked list.
+</ParamField>
+
+<ParamField query="type" type="string">
+  Alternative way to filter by publication type. Accepted values: `Manga`, `Novel`, `One-shot`, `Doujin`, `Manhwa`, `Manhua`. Overlaps with the `filter` parameter — if both are provided, `filter` takes precedence for type-based filtering.
+</ParamField>
+
+<Tip>
+  Use `filter=novels` to retrieve a top chart scoped exclusively to light novels and prose novels. This is useful for dedicated novel-reading apps or sections where mixing manga and novel rankings would be confusing for users.
+</Tip>
+
+## Example
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.koax.dev/v1/manga/top?limit=3&page=1" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "data": [
+    {
+      "id": "2",
+      "title": "Berserk",
+      "title_english": "Berserk",
+      "title_japanese": "ベルセルク",
+      "type": "Manga",
+      "chapters": null,
+      "volumes": 41,
+      "status": "publishing",
+      "score": 9.47,
+      "rank": 1,
+      "popularity": 12,
+      "synopsis": "Guts, a former mercenary now known as the 'Black Swordsman,' is out for revenge. After a tumultuous childhood, he finally finds someone he respects and believes he can follow to the ends of the earth, but a charismatic Griffith soon leads him to a fate he never expected.",
+      "genres": [
+        { "id": "1", "name": "Action" },
+        { "id": "8", "name": "Drama" },
+        { "id": "10", "name": "Fantasy" },
+        { "id": "17", "name": "Horror" }
+      ],
+      "image_url": "https://cdn.koax.dev/manga/2/cover.jpg"
+    },
+    {
+      "id": "11",
+      "title": "Vagabond",
+      "title_english": "Vagabond",
+      "title_japanese": "バガボンド",
+      "type": "Manga",
+      "chapters": 327,
+      "volumes": 37,
+      "status": "on_hiatus",
+      "score": 9.39,
+      "rank": 2,
+      "popularity": 28,
+      "synopsis": "Shinmen Takezou is a wild and brutal young man from a rural village in 17th-century Japan. After surviving the battle of Sekigahara, he sets out on a quest to become the greatest swordsman in all of Japan.",
+      "genres": [
+        { "id": "1", "name": "Action" },
+        { "id": "8", "name": "Drama" },
+        { "id": "27", "name": "Historical" },
+        { "id": "37", "name": "Seinen" }
+      ],
+      "image_url": "https://cdn.koax.dev/manga/11/cover.jpg"
+    },
+    {
+      "id": "13",
+      "title": "One Piece",
+      "title_english": "One Piece",
+      "title_japanese": "ワンピース",
+      "type": "Manga",
+      "chapters": null,
+      "volumes": null,
+      "status": "publishing",
+      "score": 9.21,
+      "rank": 3,
+      "popularity": 3,
+      "synopsis": "Gol D. Roger, a man referred to as the 'Pirate King,' is set to be executed by the World Government. Just before his death, he confirms the existence of a great treasure, One Piece, located somewhere within the vast ocean known as the Grand Line.",
+      "genres": [
+        { "id": "1", "name": "Action" },
+        { "id": "2", "name": "Adventure" },
+        { "id": "4", "name": "Comedy" },
+        { "id": "10", "name": "Fantasy" }
+      ],
+      "image_url": "https://cdn.koax.dev/manga/13/cover.jpg"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "total_pages": 512,
+    "per_page": 3,
+    "total_items": 12784,
+    "has_next_page": true
+  }
+}
+```
+
+</CodeGroup>

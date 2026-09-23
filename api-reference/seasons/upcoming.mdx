@@ -1,0 +1,112 @@
+---
+title: "GET /seasons/upcoming — Upcoming Season Anime"
+sidebarTitle: "Upcoming Season"
+description: "GET /seasons/upcoming — Retrieve anime announced for the next upcoming season, including premiere dates and episode counts."
+---
+
+The **Upcoming Season** endpoint returns all anime titles announced for the next broadcast season. Entries are populated as studios and licensors release official announcements, so the list grows progressively as the season approaches. Each entry includes confirmed premiere dates, episode counts where available, and studio information — giving you everything needed to help users discover and plan for what's coming next.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/seasons/upcoming
+```
+
+## Query Parameters
+
+<ParamField query="page" type="integer" default="1">
+  Page number of the result set to return.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="25">
+  Number of anime to return per page. Maximum allowed value is **50**.
+</ParamField>
+
+<ParamField query="order_by" type="string">
+  Field to sort results by. Accepted values:
+
+  - `title` — Sort alphabetically
+  - `popularity` — Sort by number of users who have added the title to their watchlist
+</ParamField>
+
+<ParamField query="sort" type="string">
+  Sort direction. Accepted values: `asc`, `desc`.
+</ParamField>
+
+<ParamField query="filter" type="string">
+  Filter by anime format. Accepted values: `tv`, `movie`, `ova`, `ona`, `special`.
+</ParamField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.koax.dev/v1/seasons/upcoming?filter=tv&order_by=popularity&sort=desc" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "season": "winter",
+  "year": 2025,
+  "data": [
+    {
+      "id": 57334,
+      "title": "Solo Leveling Season 2: Arise from the Shadow",
+      "title_japanese": "俺だけレベルアップな件 Season 2 -Arise from the Shadow-",
+      "image_url": "https://cdn.koax.dev/anime/57334.jpg",
+      "score": null,
+      "episodes": 13,
+      "status": "Not Yet Aired",
+      "premiere_date": "2025-01-04",
+      "format": "tv",
+      "studio": "A-1 Pictures",
+      "genres": ["Action", "Adventure", "Fantasy"],
+      "popularity_rank": 1
+    },
+    {
+      "id": 58426,
+      "title": "Wind Breaker Season 2",
+      "title_japanese": "ウィンドブレイカー 2nd Season",
+      "image_url": "https://cdn.koax.dev/anime/58426.jpg",
+      "score": null,
+      "episodes": null,
+      "status": "Not Yet Aired",
+      "premiere_date": "2025-01-11",
+      "format": "tv",
+      "studio": "CloverWorks",
+      "genres": ["Action", "Sports"],
+      "popularity_rank": 2
+    },
+    {
+      "id": 58052,
+      "title": "Dungeon Meshi Special",
+      "title_japanese": "ダンジョン飯スペシャル",
+      "image_url": "https://cdn.koax.dev/anime/58052.jpg",
+      "score": null,
+      "episodes": 1,
+      "status": "Not Yet Aired",
+      "premiere_date": "2025-01-17",
+      "format": "special",
+      "studio": "Trigger",
+      "genres": ["Adventure", "Comedy", "Fantasy"],
+      "popularity_rank": 3
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 9,
+    "per_page": 25,
+    "total": 207,
+    "has_next_page": true
+  }
+}
+```
+
+</CodeGroup>
+
+<Tip>
+  The upcoming season endpoint is a great foundation for **watchlist and countdown features**. Since `premiere_date` is included for each confirmed title, you can calculate days-until-premiere client-side and surface a countdown timer in your UI. Pair this with the `popularity_rank` field to highlight the most-anticipated titles first — perfect for a "Coming Soon" hero section or pre-season hype feed.
+</Tip>

@@ -1,0 +1,150 @@
+---
+title: "GET /characters — List Characters"
+sidebarTitle: "List Characters"
+description: "GET /characters — Retrieve a paginated list of anime and manga characters, sortable by name or number of favorites."
+---
+
+The **List Characters** endpoint returns a paginated collection of anime and manga characters from across the Koax database. Use the `order_by` and `sort` parameters to surface the most popular or alphabetically ordered characters, making it easy to build browsable character directories or leaderboards.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/characters
+```
+
+## Query Parameters
+
+<ParamField query="page" type="integer" default="1">
+  The page number of results to return. Use in combination with `limit` to paginate through the full character list.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="25">
+  Number of characters to return per page. Maximum allowed value is **50**.
+</ParamField>
+
+<ParamField query="order_by" type="string">
+  Field to sort results by. Accepted values:
+
+  - `name` — Sort alphabetically by character name
+  - `favorites` — Sort by the number of users who have favorited the character
+</ParamField>
+
+<ParamField query="sort" type="string">
+  Sort direction. Accepted values:
+
+  - `asc` — Ascending order
+  - `desc` — Descending order
+
+  Defaults to `desc` when `order_by` is `favorites`, and `asc` when `order_by` is `name`.
+</ParamField>
+
+## Response Fields
+
+<ResponseField name="data" type="array">
+  An array of Character objects. Each object contains a summary view of the character suitable for list displays.
+
+  <Expandable title="Character object">
+    <ResponseField name="id" type="integer">
+      Unique identifier for the character.
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      The character's full name in romanized form.
+    </ResponseField>
+    <ResponseField name="name_kanji" type="string">
+      The character's name written in Japanese kanji/kana. May be `null` for non-Japanese productions.
+    </ResponseField>
+    <ResponseField name="image_url" type="string">
+      URL of the character's primary portrait image.
+    </ResponseField>
+    <ResponseField name="favorites" type="integer">
+      Total number of users who have marked this character as a favorite.
+    </ResponseField>
+    <ResponseField name="anime" type="array">
+      A list of anime titles the character appears in, each with `id`, `title`, and `role`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Metadata about the current page and total result set.
+
+  <Expandable title="Pagination object">
+    <ResponseField name="current_page" type="integer">
+      The current page number.
+    </ResponseField>
+    <ResponseField name="last_page" type="integer">
+      The total number of pages available.
+    </ResponseField>
+    <ResponseField name="per_page" type="integer">
+      Number of items returned per page.
+    </ResponseField>
+    <ResponseField name="total" type="integer">
+      Total number of characters matching the query.
+    </ResponseField>
+    <ResponseField name="has_next_page" type="boolean">
+      Whether a subsequent page of results exists.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.koax.dev/v1/characters?page=1&limit=25&order_by=favorites&sort=desc" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "data": [
+    {
+      "id": 17,
+      "name": "Naruto Uzumaki",
+      "name_kanji": "うずまきナルト",
+      "image_url": "https://cdn.koax.dev/characters/17.jpg",
+      "favorites": 219095,
+      "anime": [
+        {
+          "id": 20,
+          "title": "Naruto",
+          "image_url": "https://cdn.koax.dev/anime/20.jpg",
+          "role": "Main"
+        },
+        {
+          "id": 1735,
+          "title": "Naruto: Shippuuden",
+          "image_url": "https://cdn.koax.dev/anime/1735.jpg",
+          "role": "Main"
+        }
+      ]
+    },
+    {
+      "id": 1355,
+      "name": "Levi Ackerman",
+      "name_kanji": "リヴァイ・アッカーマン",
+      "image_url": "https://cdn.koax.dev/characters/1355.jpg",
+      "favorites": 183492,
+      "anime": [
+        {
+          "id": 16498,
+          "title": "Shingeki no Kyojin",
+          "image_url": "https://cdn.koax.dev/anime/16498.jpg",
+          "role": "Supporting"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 412,
+    "per_page": 25,
+    "total": 10287,
+    "has_next_page": true
+  }
+}
+```
+
+</CodeGroup>

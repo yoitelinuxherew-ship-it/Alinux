@@ -1,0 +1,230 @@
+---
+title: "Fetch Character Profiles and Voice Actors"
+sidebarTitle: "Fetch Characters"
+description: "Retrieve detailed character profiles, voice actor data, and character lists for any anime or manga using the Koax Anime API."
+---
+
+Characters are at the heart of every great anime, and the Koax Anime API gives you deep access to character data — from role classifications and detailed biographies to full voice actor rosters across every language dub. You can retrieve the complete character list for any anime or manga, look up individual character profiles, and search for characters by name, making it easy to build character browsers, fan trivia apps, and cast pages.
+
+## Get Characters for an Anime
+
+To retrieve all characters associated with a specific anime, send a `GET` request to `/anime/{id}/characters`, replacing `{id}` with the anime's numeric ID.
+
+```bash
+curl -X GET "https://api.koax.dev/v1/anime/1735/characters" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+Each character object in the response includes the character's name, role (`Main` or `Supporting`), image, and a `voice_actors` array containing every voice actor who has played that character across different language productions.
+
+**Sample response:**
+
+```json
+{
+  "data": [
+    {
+      "id": 17,
+      "name": "Uzumaki, Naruto",
+      "name_kanji": "うずまきナルト",
+      "role": "Main",
+      "image_url": "https://cdn.koax.dev/images/characters/17.jpg",
+      "voice_actors": [
+        {
+          "name": "Takeuchi, Junko",
+          "language": "Japanese",
+          "image_url": "https://cdn.koax.dev/images/people/320.jpg"
+        },
+        {
+          "name": "Baker, Maile Flanagan",
+          "language": "English",
+          "image_url": "https://cdn.koax.dev/images/people/512.jpg"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "name": "Uchiha, Sasuke",
+      "name_kanji": "うちはサスケ",
+      "role": "Main",
+      "image_url": "https://cdn.koax.dev/images/characters/18.jpg",
+      "voice_actors": [
+        {
+          "name": "Sugiyama, Noriaki",
+          "language": "Japanese",
+          "image_url": "https://cdn.koax.dev/images/people/421.jpg"
+        },
+        {
+          "name": "Crispin Freeman",
+          "language": "English",
+          "image_url": "https://cdn.koax.dev/images/people/628.jpg"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 25,
+    "total": 152,
+    "has_next_page": true
+  }
+}
+```
+
+<Note>
+  Some characters have **multiple voice actors** for the same language — this happens when a role was recast between a series and its sequel, or when different studios handled different dubs for the same region. Always iterate over the full `voice_actors` array rather than assuming a single entry per language.
+</Note>
+
+## Get a Single Character
+
+To retrieve the full profile for a specific character, use `GET /characters/{id}`. This returns a richer object than the list endpoint, including a detailed `about` biography, all anime and manga appearances, and the complete voice actor roster.
+
+```bash
+curl -X GET "https://api.koax.dev/v1/characters/17" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+**Sample response:**
+
+```json
+{
+  "data": {
+    "id": 17,
+    "name": "Uzumaki, Naruto",
+    "name_kanji": "うずまきナルト",
+    "about": "Naruto Uzumaki is a shinobi of Konohagakure and the main protagonist of the series. Born on October 10th, he is the son of the Fourth Hokage and Kushina Uzumaki...",
+    "image_url": "https://cdn.koax.dev/images/characters/17.jpg",
+    "favorites": 120453,
+    "appearances": {
+      "anime": [
+        { "id": 20, "title": "Naruto", "role": "Main" },
+        { "id": 1735, "title": "Naruto: Shippuuden", "role": "Main" }
+      ],
+      "manga": [
+        { "id": 11, "title": "Naruto", "role": "Main" }
+      ]
+    },
+    "voice_actors": [
+      {
+        "name": "Takeuchi, Junko",
+        "language": "Japanese",
+        "image_url": "https://cdn.koax.dev/images/people/320.jpg"
+      },
+      {
+        "name": "Baker, Maile Flanagan",
+        "language": "English",
+        "image_url": "https://cdn.koax.dev/images/people/512.jpg"
+      }
+    ]
+  }
+}
+```
+
+<Accordion title="Character profile fields reference">
+
+| Field          | Type     | Description                                           |
+| -------------- | -------- | ----------------------------------------------------- |
+| `id`           | integer  | Unique character identifier                          |
+| `name`         | string   | Name in `Last, First` format                         |
+| `name_kanji`   | string   | Original Japanese name (if available)                |
+| `about`        | string   | Biography / description of the character             |
+| `image_url`    | string   | URL of the character's portrait image                |
+| `favorites`    | integer  | Number of users who have favorited this character    |
+| `appearances`  | object   | Lists of anime and manga this character appears in   |
+| `voice_actors` | array    | All voice actors across languages — see below        |
+
+</Accordion>
+
+## Search Characters by Name
+
+The `/characters/search` endpoint lets you find characters directly by name. This is useful when users search your app for a specific character without knowing which anime they belong to.
+
+```bash
+curl -X GET "https://api.koax.dev/v1/characters/search?q=naruto" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+The search supports partial name matching — querying `zoro` returns *Roronoa Zoro*, *Kuina*, and other partial matches. Results are ordered by community favorites count by default.
+
+## Voice Actor Data
+
+Every character object — whether returned from the anime characters list or the single character endpoint — includes a `voice_actors` array. Each entry in that array represents one voice actor who has played that character in a specific language production.
+
+**Voice actor object fields:**
+
+| Field       | Type   | Description                                          |
+| ----------- | ------ | ---------------------------------------------------- |
+| `name`      | string | Voice actor's name in `Last, First` format           |
+| `language`  | string | Language of the dub (e.g., `Japanese`, `English`)    |
+| `image_url` | string | URL of the voice actor's photo                       |
+
+You can use this data to power features like "Find all anime with the same Japanese voice actor" or to display cast cards grouped by language in your UI.
+
+## Building a Character Browser
+
+The example below shows a complete workflow: fetch the top-rated anime, grab all characters for the first result, and render a simple character browser in the browser console. You can adapt this logic for any frontend framework.
+
+```javascript
+const BASE_URL = "https://api.koax.dev/v1";
+const API_KEY = "YOUR_API_KEY";
+
+async function apiFetch(path) {
+  const response = await fetch(`${BASE_URL}${path}`, {
+    headers: { Authorization: `Bearer ${API_KEY}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+async function buildCharacterBrowser() {
+  // Step 1: Fetch the top-rated anime
+  const topAnime = await apiFetch(
+    "/anime/search?order_by=score&sort=desc&per_page=1"
+  );
+  const anime = topAnime.data[0];
+  console.log(`Loading characters for: ${anime.title} (score: ${anime.score})`);
+
+  // Step 2: Fetch all characters for the top anime (paginate if needed)
+  let page = 1;
+  let allCharacters = [];
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const result = await apiFetch(
+      `/anime/${anime.id}/characters?page=${page}`
+    );
+    allCharacters = allCharacters.concat(result.data);
+    hasNextPage = result.pagination.has_next_page;
+    page++;
+  }
+
+  console.log(`Found ${allCharacters.length} characters\n`);
+
+  // Step 3: Display the main characters and their Japanese voice actors
+  const mainCast = allCharacters.filter((c) => c.role === "Main");
+
+  mainCast.forEach((character) => {
+    const japaneseVA = character.voice_actors.find(
+      (va) => va.language === "Japanese"
+    );
+    const englishVA = character.voice_actors.find(
+      (va) => va.language === "English"
+    );
+
+    console.log(`🎭 ${character.name}`);
+    if (japaneseVA) console.log(`   JP: ${japaneseVA.name}`);
+    if (englishVA) console.log(`   EN: ${englishVA.name}`);
+    console.log(`   Image: ${character.image_url}`);
+    console.log("");
+  });
+}
+
+buildCharacterBrowser().catch(console.error);
+```
+
+<Tip>
+  Character data is a goldmine for fan-facing features. Consider using it to build **anime trivia quizzes** (show a character image, ask users to name the anime), **voice actor spotlight pages** (list all roles for a single VA), or **character comparison tools** that let fans pit their favorite characters side by side. The `favorites` count on character profiles is a good proxy for a character's popularity when ranking results.
+</Tip>

@@ -1,0 +1,206 @@
+---
+title: "GET /anime — List All Anime"
+sidebarTitle: "List Anime"
+description: "GET /anime — Retrieve a paginated list of all anime. Accepts filters for type, status, genre, year, and sorting options."
+---
+
+The `/anime` endpoint returns a paginated collection of anime entries from the Koax database. You can narrow results using filters for type, airing status, genre, or release year, and control ordering to suit your application — whether you're building a catalogue browser, a recommendation feed, or a discovery interface.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/anime
+```
+
+## Query Parameters
+
+<ParamField query="page" type="integer" default={1}>
+  The page number to retrieve. Starts at `1`.
+</ParamField>
+
+<ParamField query="limit" type="integer" default={25}>
+  Number of results to return per page. Maximum is `50`.
+</ParamField>
+
+<ParamField query="type" type="string">
+  Filter by anime format. Accepted values:
+
+  | Value     | Description                        |
+  |-----------|------------------------------------|
+  | `TV`      | Serialised television series       |
+  | `Movie`   | Feature-length film                |
+  | `OVA`     | Original Video Animation           |
+  | `ONA`     | Original Net Animation             |
+  | `Special` | One-off specials or bonus episodes |
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by current airing status. One of `airing`, `finished`, or `upcoming`.
+</ParamField>
+
+<ParamField query="genre_id" type="string">
+  Comma-separated list of genre IDs to filter by (e.g. `1,2,14`). Returns anime that match **all** supplied genre IDs. See [List Genres](/api-reference/genres/list) for valid IDs.
+</ParamField>
+
+<ParamField query="year" type="integer">
+  Filter by the year the anime first aired (e.g. `2013`).
+</ParamField>
+
+<ParamField query="order_by" type="string">
+  Field to sort results by. Accepted values: `score`, `title`, `episodes`, `aired`.
+</ParamField>
+
+<ParamField query="sort" type="string" default="desc">
+  Sort direction. Either `asc` (ascending) or `desc` (descending).
+</ParamField>
+
+## Response
+
+<ResponseField name="data" type="array">
+  An array of Anime Objects matching the query. Each object contains a summary of the anime entry. For the full field set, see [Get Anime](/api-reference/anime/get).
+
+  <Expandable title="Anime Object (summary)">
+    <ResponseField name="id" type="integer">
+      Unique numeric identifier for the anime.
+    </ResponseField>
+    <ResponseField name="title" type="string">
+      Primary romanised title.
+    </ResponseField>
+    <ResponseField name="title_english" type="string">
+      Official English title, if available.
+    </ResponseField>
+    <ResponseField name="type" type="string">
+      Format of the anime (e.g. `TV`, `Movie`).
+    </ResponseField>
+    <ResponseField name="episodes" type="integer">
+      Total episode count. `null` if currently airing or unknown.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Current airing status: `airing`, `finished`, or `upcoming`.
+    </ResponseField>
+    <ResponseField name="score" type="number">
+      Community score on a scale of 1–10.
+    </ResponseField>
+    <ResponseField name="image_url" type="string">
+      URL to the cover image.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Metadata about the current page of results.
+
+  <Expandable title="Pagination Object">
+    <ResponseField name="current_page" type="integer">
+      The page number returned.
+    </ResponseField>
+    <ResponseField name="per_page" type="integer">
+      Number of items per page as requested.
+    </ResponseField>
+    <ResponseField name="total_items" type="integer">
+      Total number of anime matching the applied filters.
+    </ResponseField>
+    <ResponseField name="total_pages" type="integer">
+      Total number of pages available.
+    </ResponseField>
+    <ResponseField name="has_next_page" type="boolean">
+      `true` if a subsequent page exists.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": 16498,
+      "title": "Shingeki no Kyojin",
+      "title_english": "Attack on Titan",
+      "type": "TV",
+      "episodes": 25,
+      "status": "finished",
+      "score": 8.54,
+      "image_url": "https://cdn.koax.dev/images/anime/16498.jpg"
+    },
+    {
+      "id": 1535,
+      "title": "Death Note",
+      "title_english": "Death Note",
+      "type": "TV",
+      "episodes": 37,
+      "status": "finished",
+      "score": 8.62,
+      "image_url": "https://cdn.koax.dev/images/anime/1535.jpg"
+    },
+    {
+      "id": 20,
+      "title": "Naruto",
+      "title_english": "Naruto",
+      "type": "TV",
+      "episodes": 220,
+      "status": "finished",
+      "score": 7.98,
+      "image_url": "https://cdn.koax.dev/images/anime/20.jpg"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "per_page": 25,
+    "total_items": 24801,
+    "total_pages": 993,
+    "has_next_page": true
+  }
+}
+```
+
+## Code Examples
+
+<CodeGroup>
+
+```bash curl
+curl --request GET \
+  --url "https://api.koax.dev/v1/anime?type=TV&status=finished&order_by=score&sort=desc&page=1&limit=25" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  "https://api.koax.dev/v1/anime?type=TV&status=finished&order_by=score&sort=desc&page=1&limit=25",
+  {
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+const { data, pagination } = await response.json();
+console.log(`Fetched ${data.length} anime (page ${pagination.current_page} of ${pagination.total_pages})`);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.koax.dev/v1/anime",
+    params={
+        "type": "TV",
+        "status": "finished",
+        "order_by": "score",
+        "sort": "desc",
+        "page": 1,
+        "limit": 25,
+    },
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+
+body = response.json()
+print(f"Fetched {len(body['data'])} anime")
+```
+
+</CodeGroup>
+
+<Note>
+  Requests without an `Authorization` header will receive a `401 Unauthorized` response. Ensure your API key is included on every request.
+</Note>

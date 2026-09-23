@@ -1,0 +1,152 @@
+---
+title: "GET /manga — List All Manga"
+sidebarTitle: "List Manga"
+description: "GET /manga — Retrieve a paginated list of all manga. Supports filters for type, status, genre, and sorting by score or popularity."
+---
+
+The `/manga` endpoint returns a paginated collection of manga titles from the Koax database. You can narrow results using filters for publication type, serialization status, genre, or release year, and control ordering via the `order_by` and `sort` parameters. This is the primary entry point for browsing the full manga catalog.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/manga
+```
+
+## Query Parameters
+
+<ParamField query="page" type="integer" default="1">
+  The page number to retrieve. Use alongside `limit` to paginate through results.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="25">
+  Number of results to return per page. Maximum value is `50`.
+</ParamField>
+
+<ParamField query="type" type="string">
+  Filter by manga publication type. Accepted values:
+
+  | Value | Description |
+  |-------|-------------|
+  | `Manga` | Standard Japanese manga |
+  | `Novel` | Light novel or prose novel |
+  | `One-shot` | Single-chapter standalone work |
+  | `Doujin` | Self-published / fan-made manga |
+  | `Manhwa` | Korean comics |
+  | `Manhua` | Chinese comics |
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by current serialization status. Accepted values: `publishing`, `finished`, `on_hiatus`, `discontinued`, `not_yet_published`.
+</ParamField>
+
+<ParamField query="genre_id" type="string">
+  Comma-separated list of genre IDs to filter by (e.g. `1,2,14`). Returns manga that match **all** specified genres. Use the [Genres endpoint](/api-reference/genres/list) to retrieve valid IDs.
+</ParamField>
+
+<ParamField query="year" type="integer">
+  Filter by publication start year (e.g. `1997`). Returns manga whose serialization began in the given calendar year.
+</ParamField>
+
+<ParamField query="order_by" type="string">
+  Field to sort results by. Accepted values: `score`, `title`, `chapters`, `volumes`, `published`.
+</ParamField>
+
+<ParamField query="sort" type="string" default="desc">
+  Sort direction. Accepted values: `asc`, `desc`.
+</ParamField>
+
+## Response
+
+<ResponseField name="data" type="array">
+  Array of Manga objects matching the query. See [Get Manga](/api-reference/manga/get) for the full object schema.
+
+  <Expandable title="Manga object fields (summary)">
+    <ResponseField name="id" type="string">Unique manga identifier.</ResponseField>
+    <ResponseField name="title" type="string">Primary romanized title.</ResponseField>
+    <ResponseField name="type" type="string">Publication type (e.g. `Manga`, `Novel`).</ResponseField>
+    <ResponseField name="chapters" type="integer | null">Total chapter count, or `null` for ongoing series.</ResponseField>
+    <ResponseField name="volumes" type="integer | null">Total volume count, or `null` for ongoing series.</ResponseField>
+    <ResponseField name="status" type="string">Current serialization status.</ResponseField>
+    <ResponseField name="score" type="number">Community score out of 10.</ResponseField>
+    <ResponseField name="rank" type="integer">Global rank by score.</ResponseField>
+    <ResponseField name="popularity" type="integer">Popularity rank based on list adds.</ResponseField>
+    <ResponseField name="image_url" type="string">URL of the cover image.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination metadata for the current response.
+
+  <Expandable title="Pagination fields">
+    <ResponseField name="current_page" type="integer">The current page number.</ResponseField>
+    <ResponseField name="total_pages" type="integer">Total number of available pages.</ResponseField>
+    <ResponseField name="per_page" type="integer">Number of items per page.</ResponseField>
+    <ResponseField name="total_items" type="integer">Total matching manga across all pages.</ResponseField>
+    <ResponseField name="has_next_page" type="boolean">`true` if a subsequent page exists.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.koax.dev/v1/manga?page=1&limit=25&status=finished&order_by=score&sort=desc" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "data": [
+    {
+      "id": "2",
+      "title": "Berserk",
+      "title_english": "Berserk",
+      "title_japanese": "ベルセルク",
+      "type": "Manga",
+      "chapters": null,
+      "volumes": 41,
+      "status": "publishing",
+      "score": 9.47,
+      "rank": 1,
+      "popularity": 12,
+      "synopsis": "Guts, a former mercenary now known as the 'Black Swordsman,' is out for revenge...",
+      "genres": [
+        { "id": "1", "name": "Action" },
+        { "id": "8", "name": "Drama" },
+        { "id": "10", "name": "Fantasy" }
+      ],
+      "image_url": "https://cdn.koax.dev/manga/2/cover.jpg"
+    },
+    {
+      "id": "13",
+      "title": "One Piece",
+      "title_english": "One Piece",
+      "title_japanese": "ワンピース",
+      "type": "Manga",
+      "chapters": null,
+      "volumes": null,
+      "status": "publishing",
+      "score": 9.21,
+      "rank": 10,
+      "popularity": 3,
+      "synopsis": "Gol D. Roger, a man referred to as the 'Pirate King,' is set to be executed...",
+      "genres": [
+        { "id": "1", "name": "Action" },
+        { "id": "2", "name": "Adventure" },
+        { "id": "4", "name": "Comedy" }
+      ],
+      "image_url": "https://cdn.koax.dev/manga/13/cover.jpg"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "total_pages": 512,
+    "per_page": 25,
+    "total_items": 12784,
+    "has_next_page": true
+  }
+}
+```
+
+</CodeGroup>

@@ -1,0 +1,130 @@
+---
+title: "GET /manga/search — Search Manga by Title"
+sidebarTitle: "Search Manga"
+description: "GET /manga/search — Search the manga database by keyword with filters for type, status, year, genre, and score range."
+---
+
+The `/manga/search` endpoint lets you query the manga database using a free-text keyword, with optional filters to narrow results by type, publication status, year, genre, and community score. Results are returned in pages and can be sorted by any supported field. This is the recommended endpoint for building search UIs and discovery features.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/manga/search
+```
+
+## Query Parameters
+
+<ParamField query="q" type="string" required>
+  The search keyword or phrase to match against manga titles. Both English and romanized Japanese titles are searched. Partial matches are supported.
+</ParamField>
+
+<ParamField query="type" type="string">
+  Filter results by publication type. Accepted values: `Manga`, `Novel`, `One-shot`, `Doujin`, `Manhwa`, `Manhua`.
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by serialization status. Accepted values: `publishing`, `finished`, `on_hiatus`, `discontinued`, `not_yet_published`.
+</ParamField>
+
+<ParamField query="genre_id" type="string">
+  Comma-separated list of genre IDs to filter by (e.g. `1,10`). Only manga matching **all** provided genres are returned.
+</ParamField>
+
+<ParamField query="score_min" type="number">
+  Minimum community score (inclusive). Must be between `0` and `10`. Use with `score_max` to define a score range.
+</ParamField>
+
+<ParamField query="score_max" type="number">
+  Maximum community score (inclusive). Must be between `0` and `10`.
+</ParamField>
+
+<ParamField query="order_by" type="string">
+  Field to sort results by. Accepted values: `score`, `title`, `chapters`, `volumes`, `published`.
+</ParamField>
+
+<ParamField query="sort" type="string" default="desc">
+  Sort direction. Accepted values: `asc`, `desc`.
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number for paginated results.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="25">
+  Number of results per page. Maximum value is `50`.
+</ParamField>
+
+<Tip>
+  Search queries are matched against both the English title and the romanized Japanese title (romaji). For example, searching `"one piece"` and `"wan pisu"` will both return the same series. If you're unsure of the exact English translation, try the original romanized Japanese title for more reliable results.
+</Tip>
+
+## Example Request
+
+```
+GET https://api.koax.dev/v1/manga/search?q=one+piece&status=publishing
+```
+
+## Example
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.koax.dev/v1/manga/search?q=one+piece&status=publishing&order_by=score&sort=desc" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "data": [
+    {
+      "id": "13",
+      "title": "One Piece",
+      "title_english": "One Piece",
+      "title_japanese": "ワンピース",
+      "type": "Manga",
+      "chapters": null,
+      "volumes": null,
+      "status": "publishing",
+      "score": 9.21,
+      "rank": 10,
+      "popularity": 3,
+      "synopsis": "Gol D. Roger, a man referred to as the 'Pirate King,' is set to be executed by the World Government. Just before his death, he confirms the existence of a great treasure, One Piece, located somewhere within the vast ocean known as the Grand Line.",
+      "genres": [
+        { "id": "1", "name": "Action" },
+        { "id": "2", "name": "Adventure" },
+        { "id": "4", "name": "Comedy" },
+        { "id": "10", "name": "Fantasy" }
+      ],
+      "image_url": "https://cdn.koax.dev/manga/13/cover.jpg"
+    },
+    {
+      "id": "1204",
+      "title": "One Piece: Wanted!",
+      "title_english": "One Piece: Wanted!",
+      "title_japanese": "ワンピース WANTED!",
+      "type": "One-shot",
+      "chapters": 1,
+      "volumes": 1,
+      "status": "finished",
+      "score": 7.84,
+      "rank": 1547,
+      "popularity": 890,
+      "synopsis": "A one-shot precursor to the main One Piece series, following a cowboy-type protagonist.",
+      "genres": [
+        { "id": "1", "name": "Action" },
+        { "id": "2", "name": "Adventure" }
+      ],
+      "image_url": "https://cdn.koax.dev/manga/1204/cover.jpg"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "total_pages": 1,
+    "per_page": 25,
+    "total_items": 2,
+    "has_next_page": false
+  }
+}
+```
+
+</CodeGroup>

@@ -1,0 +1,166 @@
+---
+title: "GET /anime/top — Top-Rated Anime"
+sidebarTitle: "Top Anime"
+description: "GET /anime/top — Retrieve the top-rated anime ranked by community score, with optional filters for type and time period."
+---
+
+The `/anime/top` endpoint returns an ordered list of the highest-rated anime in the Koax database, ranked by their weighted community score by default. You can switch the ranking metric to popularity (list additions), favourites (explicit saves), airing status, or upcoming releases using the `filter` parameter — making this endpoint equally useful for "trending now" widgets, genre leaderboards, and personalised recommendation carousels.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/anime/top
+```
+
+## Query Parameters
+
+<ParamField query="type" type="string">
+  Restrict the top list to a specific anime format. One of `TV`, `Movie`, `OVA`, `ONA`, or `Special`.
+</ParamField>
+
+<ParamField query="limit" type="integer" default={25}>
+  Number of results to return. Maximum is `50`.
+</ParamField>
+
+<ParamField query="page" type="integer" default={1}>
+  Page number to retrieve, enabling you to paginate through extended rankings (e.g. positions 26–50).
+</ParamField>
+
+<ParamField query="filter" type="string">
+  Change the ranking metric used to build the list. When omitted, results are ranked by **score**.
+
+  | Value          | Ranks by                                                      |
+  |----------------|---------------------------------------------------------------|
+  | `airing`       | Score among currently-airing series only                      |
+  | `upcoming`     | Anticipated titles not yet aired, ranked by list additions    |
+  | `bypopularity` | Total number of users who added the title to any list         |
+  | `favorite`     | Number of users who explicitly marked the title as a favourite |
+</ParamField>
+
+## Ranking Modes Explained
+
+Koax supports four distinct ways to rank anime, each answering a different question:
+
+- **Score** *(default)*: The classic leaderboard — weighted average of all community ratings on a 1–10 scale. Bayesian weighting prevents titles with very few votes from dominating. Best for surfacing objectively well-regarded series.
+- **By Popularity** (`bypopularity`): Counts how many users have added a title to *any* list (watching, completed, plan-to-watch, etc.). High-popularity titles are widely known but not necessarily top-rated — ideal for mainstream recommendation features.
+- **Favourite** (`favorite`): Counts deliberate "favourite" saves — a stronger signal of genuine love for a series than a passive list add. Useful for surfaces like "most beloved of all time."
+- **Airing / Upcoming** (`airing`, `upcoming`): Scoped leaderboards for currently-broadcasting series and announced-but-not-yet-aired titles. Perfect for a "what's hot this season" widget.
+
+## Example Response
+
+```json
+{
+  "filter": "score",
+  "data": [
+    {
+      "rank": 1,
+      "id": 9253,
+      "title": "Steins;Gate",
+      "title_english": "Steins;Gate",
+      "title_japanese": "シュタインズ・ゲート",
+      "type": "TV",
+      "episodes": 24,
+      "status": "finished",
+      "score": 9.08,
+      "popularity": 4,
+      "image_url": "https://cdn.koax.dev/images/anime/9253.jpg"
+    },
+    {
+      "rank": 2,
+      "id": 5114,
+      "title": "Fullmetal Alchemist: Brotherhood",
+      "title_english": "Fullmetal Alchemist: Brotherhood",
+      "title_japanese": "鋼の錬金術師 FULLMETAL ALCHEMIST",
+      "type": "TV",
+      "episodes": 64,
+      "status": "finished",
+      "score": 9.11,
+      "popularity": 2,
+      "image_url": "https://cdn.koax.dev/images/anime/5114.jpg"
+    },
+    {
+      "rank": 3,
+      "id": 28977,
+      "title": "Gintama°",
+      "title_english": "Gintama°",
+      "title_japanese": "銀魂°",
+      "type": "TV",
+      "episodes": 51,
+      "status": "finished",
+      "score": 9.06,
+      "popularity": 77,
+      "image_url": "https://cdn.koax.dev/images/anime/28977.jpg"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "per_page": 25,
+    "total_items": 25000,
+    "total_pages": 1000,
+    "has_next_page": true
+  }
+}
+```
+
+## Code Examples
+
+<CodeGroup>
+
+```bash curl
+# Top 10 highest-rated anime overall
+curl --request GET \
+  --url "https://api.koax.dev/v1/anime/top?limit=10" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+
+# Top 10 most popular currently-airing series
+curl --request GET \
+  --url "https://api.koax.dev/v1/anime/top?filter=airing&limit=10" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript JavaScript
+// Top 10 most-favourited anime
+const response = await fetch(
+  "https://api.koax.dev/v1/anime/top?filter=favorite&limit=10",
+  {
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+const { data } = await response.json();
+data.forEach(({ rank, title_english, score }) => {
+  console.log(`#${rank} ${title_english} — ${score}`);
+});
+```
+
+```python Python
+import requests
+
+# Top 25 TV anime ranked by score
+response = requests.get(
+    "https://api.koax.dev/v1/anime/top",
+    params={"type": "TV", "limit": 25},
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+
+for anime in response.json()["data"]:
+    print(f"#{anime['rank']} {anime['title_english']} ({anime['score']})")
+```
+
+</CodeGroup>
+
+<Tip>
+  Combine `type=Movie` with the default score ranking to get an instant leaderboard of the greatest anime films of all time — perfect for a dedicated movie spotlight section in your app:
+
+  ```
+  GET https://api.koax.dev/v1/anime/top?type=Movie&limit=10
+  ```
+
+  Similarly, `type=Movie&filter=favorite` surfaces the most beloved films by explicit user preference, which can differ significantly from the score-based list.
+</Tip>
+
+<Note>
+  Rank positions reflect the **global** ordering across all entries in the database; they are not re-indexed after applying a `type` filter. This means you may see non-consecutive rank numbers (e.g. `#2`, `#5`, `#11`) when filtering by type, because the gaps are occupied by anime of other types.
+</Note>

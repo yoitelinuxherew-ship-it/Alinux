@@ -1,47 +1,122 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with Koax Anime API in 5 Minutes"
+sidebarTitle: "Quickstart"
+description: "Make your first Koax Anime API request in minutes. Sign up, get your API key, and start fetching anime data with a single curl command."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+The fastest way to understand what Koax Anime API can do is to see it in action. This guide walks you from zero to a live API response in four steps — no SDK required, just a terminal and your browser. By the end, you'll have retrieved real anime data and know exactly where to go next.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Sign Up and Get Your API Key">
+    Before you can call any endpoint you need an API key that identifies your account.
 
-    ```bash
-    npm install your-package
-    ```
+    1. Go to [https://koax.dev/signup](https://koax.dev/signup) and create a free account.
+    2. Verify your email address — check your inbox for the confirmation link.
+    3. Log in and navigate to **Dashboard → API Keys**.
+    4. Click **Generate New Key**, give it a descriptive name (e.g. `my-first-project`), and click **Create**.
+    5. Copy the key immediately and store it somewhere safe — it won't be shown again in full.
+
+    <Info>
+      You can generate multiple keys for different projects and revoke any of them individually from the same dashboard page.
+    </Info>
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+
+  <Step title="Make Your First Request">
+    With your key in hand, open a terminal and run the following `curl` command. Replace `YOUR_API_KEY` with the key you just copied.
 
     ```bash
-    your-cli init
+    curl -H "Authorization: Bearer YOUR_API_KEY" \
+      https://api.koax.dev/v1/anime/top
     ```
+
+    You should receive a JSON response within a few hundred milliseconds containing a ranked list of top anime titles. If you see a `401 Unauthorized` error, double-check that you pasted the full key value correctly.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
 
-    ```bash
-    your-cli start
+  <Step title="Parse the Response">
+    A successful response looks like this. Each object in the `data` array represents one anime title:
+
+    ```json
+    {
+      "status": "success",
+      "total": 5000,
+      "page": 1,
+      "per_page": 25,
+      "data": [
+        {
+          "id": "101",
+          "title": "Fullmetal Alchemist: Brotherhood",
+          "type": "TV",
+          "episodes": 64,
+          "score": 9.11,
+          "image_url": "https://cdn.koax.dev/images/anime/101.jpg"
+        },
+        {
+          "id": "203",
+          "title": "Steins;Gate",
+          "type": "TV",
+          "episodes": 24,
+          "score": 9.07,
+          "image_url": "https://cdn.koax.dev/images/anime/203.jpg"
+        }
+      ]
+    }
     ```
+
+    | Field | Type | Description |
+    |---|---|---|
+    | `id` | string | Unique identifier for the anime title |
+    | `title` | string | Primary title in English |
+    | `type` | string | Format — `TV`, `Movie`, `OVA`, `ONA`, or `Special` |
+    | `episodes` | integer | Total episode count (`null` if ongoing) |
+    | `score` | float | Community rating out of 10 |
+    | `image_url` | string | URL of the cover image |
+  </Step>
+
+  <Step title="Explore More">
+    You've made your first successful API call — now explore what else is possible.
+
+    - Read the [Authentication guide](/authentication) to learn best practices for managing your API key.
+    - Follow the [Search Anime guide](/guides/search-anime) to filter titles by genre, year, and score.
+    - Browse the full [API Reference](/api-reference/anime/list) to see every available endpoint and parameter.
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+## Same Request, Multiple Languages
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+The `curl` command above is great for testing, but here's how to make the exact same request from your application code.
+
+<CodeGroup>
+
+```javascript JavaScript
+const response = await fetch("https://api.koax.dev/v1/anime/top", {
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+  },
+});
+
+const data = await response.json();
+console.log(data);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.koax.dev/v1/anime/top",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+
+data = response.json()
+print(data)
+```
+
+```bash curl
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://api.koax.dev/v1/anime/top
+```
+
+</CodeGroup>
+
+<Tip>
+  Once you're comfortable with the `/anime/top` endpoint, try `/anime/search?q=attack+on+titan` next. The search endpoint supports full-text queries, genre filters, score ranges, and more — it's the most powerful tool in the API. See the [Search Anime guide](/guides/search-anime) for a full walkthrough.
 </Tip>

@@ -1,0 +1,120 @@
+---
+title: "GET /genres — List All Genres"
+sidebarTitle: "List Genres"
+description: "GET /genres — Retrieve all available anime and manga genres with IDs you can use to filter anime and manga results."
+---
+
+The **List Genres** endpoint returns all genre categories available in the Koax database. Each genre carries a unique numeric ID that you can pass as a filter parameter to other endpoints — such as anime or manga listings — to narrow results to a specific category. Use the `type` parameter to retrieve genres scoped to anime or manga, as the available genre sets differ between the two media types.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/genres
+```
+
+## Query Parameters
+
+<ParamField query="type" type="string" default="anime">
+  Specifies the media type for which genres should be returned. Accepted values:
+
+  - `anime` — Return genres applicable to anime titles
+  - `manga` — Return genres applicable to manga titles
+</ParamField>
+
+## Response Fields
+
+<ResponseField name="data" type="array">
+  An array of Genre objects.
+
+  <Expandable title="Genre object">
+    <ResponseField name="id" type="integer">
+      Unique numeric identifier for the genre. Use this value as `genre_id` in other endpoints.
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      Display name of the genre (e.g., `"Action"`, `"Romance"`).
+    </ResponseField>
+    <ResponseField name="description" type="string">
+      A brief description of what titles in this genre typically involve.
+    </ResponseField>
+    <ResponseField name="count" type="integer">
+      The total number of titles in the database tagged with this genre.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.koax.dev/v1/genres?type=anime" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Action",
+      "description": "Titles featuring fast-paced physical conflict, combat sequences, and high-stakes confrontations.",
+      "count": 3821
+    },
+    {
+      "id": 2,
+      "name": "Adventure",
+      "description": "Stories centered on journeys, exploration, and discovery across unfamiliar worlds or territories.",
+      "count": 2954
+    },
+    {
+      "id": 4,
+      "name": "Comedy",
+      "description": "Titles primarily focused on humor, wit, and lighthearted situations.",
+      "count": 4102
+    },
+    {
+      "id": 8,
+      "name": "Drama",
+      "description": "Character-driven narratives that explore emotional depth, conflict, and personal growth.",
+      "count": 2318
+    },
+    {
+      "id": 10,
+      "name": "Fantasy",
+      "description": "Stories set in magical or supernatural worlds governed by rules beyond ordinary reality.",
+      "count": 3577
+    },
+    {
+      "id": 22,
+      "name": "Romance",
+      "description": "Titles in which romantic relationships and emotional bonds form a central part of the narrative.",
+      "count": 2743
+    },
+    {
+      "id": 24,
+      "name": "Sci-Fi",
+      "description": "Futuristic or speculative stories grounded in advanced technology, space travel, or scientific concepts.",
+      "count": 1889
+    },
+    {
+      "id": 41,
+      "name": "Thriller",
+      "description": "Suspense-driven narratives featuring tension, mystery, and high psychological stakes.",
+      "count": 612
+    }
+  ]
+}
+```
+
+</CodeGroup>
+
+<Note>
+  To filter anime or manga results by genre, pass the genre's `id` as the `genre_id` query parameter on supported endpoints. For example, to list all action anime use:
+
+  ```
+  GET https://api.koax.dev/v1/anime?genre_id=1
+  ```
+
+  Or use the dedicated [Anime by Genre](/api-reference/genres/anime-by-genre) endpoint for paginated, sortable genre browsing.
+</Note>

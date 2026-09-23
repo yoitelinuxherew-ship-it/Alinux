@@ -1,0 +1,172 @@
+---
+title: "Filter and Sort API Results Effectively"
+sidebarTitle: "Filtering & Sorting"
+description: "Master filtering by genre, year, status, and score, and learn to sort results for building rich anime discovery features with Koax API."
+---
+
+The Koax Anime API exposes a flexible set of query parameters that let you slice and sort the catalog exactly the way your application needs. You can filter by genre, year, season, airing status, score range, and type — and chain any combination of these together to produce precisely targeted result sets. Understanding how these parameters interact is the key to building fast, relevant discovery features without doing heavy lifting on the client side.
+
+## Available Filter Parameters
+
+The table below covers every filter parameter the API accepts, which endpoints support it, and the expected values.
+
+| Parameter   | Applies To      | Values                            | Example                        |
+| ----------- | --------------- | --------------------------------- | ------------------------------ |
+| `q`         | all             | string                            | `?q=attack+on+titan`           |
+| `type`      | anime           | `TV`, `Movie`, `OVA`, `ONA`, `Special` | `?type=TV`                |
+| `status`    | anime, manga    | `airing`, `finished`, `upcoming`  | `?status=airing`               |
+| `genre_id`  | anime, manga    | integer (or comma-separated list) | `?genre_id=1`                  |
+| `year`      | anime           | integer (4-digit year)            | `?year=2023`                   |
+| `season`    | anime           | `winter`, `spring`, `summer`, `fall` | `?season=fall`              |
+| `score_min` | anime, manga    | float, 0.0 – 10.0                 | `?score_min=8.0`               |
+| `score_max` | anime, manga    | float, 0.0 – 10.0                 | `?score_max=9.5`               |
+| `order_by`  | all             | `score`, `title`, `episodes`, `aired` | `?order_by=score`          |
+| `sort`      | all             | `asc`, `desc`                     | `?sort=desc`                   |
+
+<Note>
+  All filter parameters are combined using **AND logic** — every result returned satisfies every filter you apply simultaneously. There is no built-in OR operator between parameters. If you need OR-style results (e.g., anime from 2022 *or* 2023), make two separate requests and merge the results in your application.
+</Note>
+
+## Sorting
+
+You control result ordering with two parameters used together: `order_by` specifies which field to sort on, and `sort` sets the direction.
+
+| Parameter  | Default     | Description                              |
+| ---------- | ----------- | ---------------------------------------- |
+| `order_by` | `relevance` | Field to sort results by                 |
+| `sort`     | `desc`      | Sort direction: `asc` (ascending) or `desc` (descending) |
+
+**Sortable fields:**
+
+<Accordion title="score — Average community rating">
+  Sorts results by the anime or manga's aggregated community score on a 0–10 scale. Use `sort=desc` to surface the highest-rated titles first. Ideal for "top picks" and "best of season" features.
+</Accordion>
+
+<Accordion title="title — Alphabetical">
+  Sorts results alphabetically by the primary title. Use `sort=asc` for A→Z, `sort=desc` for Z→A. Useful for building browsable directory-style pages.
+</Accordion>
+
+<Accordion title="episodes — Episode count">
+  Sorts by the total number of episodes. `sort=desc` surfaces the longest-running series first; `sort=asc` puts short-form and movie content at the top.
+</Accordion>
+
+<Accordion title="aired — Air date">
+  Sorts by the `aired.from` date (premiere date). Use `sort=desc` to show the most recently premiered titles first. Ideal for "newest releases" feeds.
+</Accordion>
+
+## Score Range Filtering
+
+The `score_min` and `score_max` parameters let you define a score band, filtering out titles that don't meet your quality threshold. Scores are floats between `0.0` and `10.0`.
+
+The example below retrieves all TV anime with a community score of **8.5 or higher**, sorted from best to worst:
+
+<CodeGroup>
+
+```bash curl
+curl -X GET "https://api.koax.dev/v1/anime/search?type=TV&score_min=8.5&order_by=score&sort=desc" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  type: "TV",
+  score_min: "8.5",
+  order_by: "score",
+  sort: "desc",
+});
+
+const response = await fetch(
+  `https://api.koax.dev/v1/anime/search?${params}`,
+  {
+    headers: { Authorization: "Bearer YOUR_API_KEY" },
+  }
+);
+
+const { data } = await response.json();
+data.forEach((anime) => console.log(`${anime.title}: ${anime.score}`));
+```
+
+</CodeGroup>
+
+Use `score_max` to define an upper bound — for example, `?score_min=7.0&score_max=7.9` surfaces "good but underrated" titles that sit just below the top tier.
+
+## Multiple Genres
+
+You can filter by more than one genre simultaneously by passing a comma-separated list of genre IDs to `genre_id`. The API returns titles that belong to **all** specified genres (AND logic).
+
+```bash
+# Anime that are both Action (1) AND Adventure (2)
+curl -X GET "https://api.koax.dev/v1/anime/search?genre_id=1,2" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+Common genre ID combinations for discovery features:
+
+| Combination          | Genre IDs | Use Case                         |
+| -------------------- | --------- | -------------------------------- |
+| Action + Adventure   | `1,2`     | Shonen-style battle series       |
+| Romance + Comedy     | `22,4`    | Romantic comedy (rom-com)        |
+| Fantasy + Adventure  | `10,2`    | Isekai and epic fantasy          |
+| Sci-Fi + Action      | `24,1`    | Mecha and cyberpunk titles       |
+| Drama + Slice of Life| `8,36`    | Slice-of-life drama              |
+
+## Worked Example: Action-Adventure TV Anime from 2023, Score ≥ 7.5
+
+The scenario below ties everything together. You want to find all TV anime from 2023 that belong to both the Action and Adventure genres, have a community score of at least 7.5, and are ordered from best-rated to lowest. This is the kind of query that powers a "Best of 2023" discovery widget.
+
+<CodeGroup>
+
+```bash curl
+curl -X GET \
+  "https://api.koax.dev/v1/anime/search?type=TV&year=2023&genre_id=1,2&score_min=7.5&order_by=score&sort=desc" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript JavaScript
+async function getBestActionAdventure2023() {
+  const params = new URLSearchParams({
+    type: "TV",
+    year: "2023",
+    genre_id: "1,2",
+    score_min: "7.5",
+    order_by: "score",
+    sort: "desc",
+  });
+
+  const response = await fetch(
+    `https://api.koax.dev/v1/anime/search?${params}`,
+    {
+      headers: {
+        Authorization: "Bearer YOUR_API_KEY",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  const { data, pagination } = await response.json();
+
+  console.log(
+    `Found ${pagination.total} action-adventure TV anime from 2023 with score ≥ 7.5\n`
+  );
+
+  data.forEach((anime, index) => {
+    console.log(`${index + 1}. ${anime.title}`);
+    console.log(`   Score: ${anime.score} | Episodes: ${anime.episodes}`);
+    console.log(`   Status: ${anime.status}`);
+    console.log("");
+  });
+
+  return data;
+}
+
+getBestActionAdventure2023().catch(console.error);
+```
+
+</CodeGroup>
+
+<Tip>
+  If your application lets users build their own discovery feeds, consider **saving filter combinations as named presets**. Store the parameter object in your database or local storage (e.g., `{ type: "TV", year: 2023, genre_id: "1,2", score_min: 7.5 }`) and rebuild the query string on demand. This makes it trivial to add a "My Filters" or "Saved Searches" feature without any extra API design on your end.
+</Tip>

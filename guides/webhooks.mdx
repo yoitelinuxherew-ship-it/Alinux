@@ -1,0 +1,275 @@
+---
+title: "Configure Webhooks for Real-Time Anime Updates"
+sidebarTitle: "Webhooks"
+description: "Set up Koax Anime API webhooks to receive real-time notifications when new anime is added, episodes air, or scores change significantly."
+---
+
+Webhooks let your application react to changes in the Koax Anime database the moment they happen, without polling the API on a schedule. Instead of repeatedly asking "is there anything new?", you register a URL and the Koax platform pushes a structured HTTP POST payload to that URL whenever a subscribed event occurs. This is ideal for powering live episode trackers, push notification systems, Discord bots, and any feature where freshness matters.
+
+## Webhook Events
+
+Koax Anime API supports the following webhook events. You subscribe to one or more of these when registering a webhook endpoint.
+
+| Event                   | Description                                             |
+| ----------------------- | ------------------------------------------------------- |
+| `anime.new`             | A new anime title has been added to the database        |
+| `anime.episode_aired`   | A new episode of a tracked anime has aired              |
+| `anime.score_updated`   | An anime's community score has changed by ≥ 0.5 points  |
+| `manga.new`             | A new manga title has been added to the database        |
+| `manga.chapter_released`| A new chapter of a tracked manga has been released      |
+| `season.new`            | New seasonal anime data is available for an upcoming season |
+
+## Register a Webhook
+
+To start receiving event notifications, send a `POST` request to `/webhooks` with the URL you want events delivered to, the list of events you want to subscribe to, and a secret string you'll use to verify incoming payloads.
+
+<Steps>
+
+  <Step title="Choose your endpoint URL">
+    Make sure the URL is publicly reachable and responds with a `2xx` status code to incoming POST requests. During local development, use a tunneling tool like [ngrok](https://ngrok.com) to expose a local port.
+  </Step>
+
+  <Step title="Generate a webhook secret">
+    Create a strong random string (at least 32 characters) and store it securely — you'll use it to verify that incoming payloads genuinely came from Koax. Never commit this secret to source control.
+  </Step>
+
+  <Step title="Register the webhook">
+    Send the registration request with your URL, selected events, and secret:
+
+    ```bash
+    curl -X POST "https://api.koax.dev/v1/webhooks" \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "url": "https://yourapp.com/webhooks/koax",
+        "events": ["anime.new", "anime.episode_aired"],
+        "secret": "your_webhook_secret"
+      }'
+    ```
+
+    **Registration payload fields:**
+
+    | Field    | Type            | Required | Description                                     |
+    | -------- | --------------- | -------- | ----------------------------------------------- |
+    | `url`    | string          | ✅        | Public HTTPS URL to receive event payloads      |
+    | `events` | array\<string\> | ✅        | One or more event names from the table above    |
+    | `secret` | string          | ✅        | Shared secret for HMAC signature verification   |
+
+    **Sample response:**
+
+    ```json
+    {
+      "data": {
+        "id": "wh_01j4k8x2n9z3v7b6m5",
+        "url": "https://yourapp.com/webhooks/koax",
+        "events": ["anime.new", "anime.episode_aired"],
+        "status": "active",
+        "created_at": "2024-10-15T09:22:00Z"
+      }
+    }
+    ```
+
+    Save the `id` field — you'll need it to update or delete this webhook later.
+  </Step>
+
+</Steps>
+
+## Webhook Payload
+
+When a subscribed event fires, Koax sends a `POST` request to your endpoint with a JSON body structured as follows. The example below shows the payload for an `anime.episode_aired` event.
+
+```json
+{
+  "event": "anime.episode_aired",
+  "timestamp": "2024-10-15T18:00:00Z",
+  "webhook_id": "wh_01j4k8x2n9z3v7b6m5",
+  "data": {
+    "anime_id": 52991,
+    "title": "Frieren: Beyond Journey's End",
+    "episode": {
+      "number": 16,
+      "title": "I Don't Really Understand Humans",
+      "aired_at": "2024-10-15T17:55:00Z",
+      "duration_minutes": 24
+    },
+    "image_url": "https://cdn.koax.dev/images/anime/52991.jpg"
+  }
+}
+```
+
+**Top-level payload fields:**
+
+| Field        | Type   | Description                                           |
+| ------------ | ------ | ----------------------------------------------------- |
+| `event`      | string | The event name that triggered this delivery           |
+| `timestamp`  | string | ISO 8601 UTC timestamp of when the event occurred     |
+| `webhook_id` | string | ID of the registered webhook that received this event |
+| `data`       | object | Event-specific data — shape varies by event type      |
+
+## Verify Webhook Signatures
+
+Every incoming webhook request includes an `X-Koax-Signature` header containing an HMAC-SHA256 signature of the raw request body, signed with your webhook secret. You must verify this signature before processing the payload to ensure the request genuinely came from Koax and hasn't been tampered with.
+
+<Warning>
+  **Always verify webhook signatures before processing any payload.** Skipping this step means your endpoint will blindly trust any HTTP POST it receives, which could allow an attacker to inject fake events and trigger unintended actions in your application.
+</Warning>
+
+**How the signature is computed:**
+
+```
+X-Koax-Signature: sha256=HMAC_SHA256(secret, raw_request_body)
+```
+
+The header value is prefixed with `sha256=`. Strip this prefix before comparing.
+
+<CodeGroup>
+
+```javascript Node.js
+const crypto = require("crypto");
+
+function verifyKoaxSignature(rawBody, signatureHeader, secret) {
+  // Strip the "sha256=" prefix
+  const receivedSignature = signatureHeader.replace(/^sha256=/, "");
+
+  // Compute expected signature over the raw (unparsed) request body
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(rawBody, "utf8")
+    .digest("hex");
+
+  // Use timingSafeEqual to prevent timing attacks
+  const receivedBuf = Buffer.from(receivedSignature, "hex");
+  const expectedBuf = Buffer.from(expectedSignature, "hex");
+
+  if (receivedBuf.length !== expectedBuf.length) return false;
+
+  return crypto.timingSafeEqual(receivedBuf, expectedBuf);
+}
+
+// Express.js example
+app.post(
+  "/webhooks/koax",
+  express.raw({ type: "application/json" }), // parse body as Buffer, not JSON
+  (req, res) => {
+    const signature = req.headers["x-koax-signature"];
+    const secret = process.env.KOAX_WEBHOOK_SECRET;
+
+    if (!verifyKoaxSignature(req.body, signature, secret)) {
+      return res.status(401).json({ error: "Invalid signature" });
+    }
+
+    const payload = JSON.parse(req.body.toString("utf8"));
+    console.log("Received event:", payload.event);
+
+    // Handle the event
+    switch (payload.event) {
+      case "anime.episode_aired":
+        handleEpisodeAired(payload.data);
+        break;
+      case "anime.new":
+        handleNewAnime(payload.data);
+        break;
+      default:
+        console.log("Unhandled event type:", payload.event);
+    }
+
+    res.status(200).json({ received: true });
+  }
+);
+```
+
+```python Python (Flask)
+import hashlib
+import hmac
+import os
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+def verify_koax_signature(raw_body: bytes, signature_header: str, secret: str) -> bool:
+    """Verify the X-Koax-Signature header against the raw request body."""
+    if not signature_header or not signature_header.startswith("sha256="):
+        return False
+
+    received_signature = signature_header[len("sha256="):]
+
+    expected_signature = hmac.new(
+        secret.encode("utf-8"),
+        raw_body,
+        hashlib.sha256,
+    ).hexdigest()
+
+    # Use compare_digest to prevent timing attacks
+    return hmac.compare_digest(received_signature, expected_signature)
+
+
+@app.route("/webhooks/koax", methods=["POST"])
+def koax_webhook():
+    raw_body = request.get_data()  # raw bytes, before JSON parsing
+    signature = request.headers.get("X-Koax-Signature", "")
+    secret = os.environ["KOAX_WEBHOOK_SECRET"]
+
+    if not verify_koax_signature(raw_body, signature, secret):
+        return jsonify({"error": "Invalid signature"}), 401
+
+    payload = request.get_json()
+    event = payload.get("event")
+    print(f"Received event: {event}")
+
+    if event == "anime.episode_aired":
+        handle_episode_aired(payload["data"])
+    elif event == "anime.new":
+        handle_new_anime(payload["data"])
+
+    return jsonify({"received": True}), 200
+```
+
+</CodeGroup>
+
+<Info>
+  Always read the **raw request body bytes** before parsing them as JSON, and compute the HMAC over those raw bytes. Parsing to JSON first and then re-serializing can change whitespace or key order, which would cause the signature check to fail.
+</Info>
+
+## Manage Webhooks
+
+You can list all your registered webhooks or delete one at any time.
+
+**List all webhooks:**
+
+```bash
+curl -X GET "https://api.koax.dev/v1/webhooks" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+**Sample list response:**
+
+```json
+{
+  "data": [
+    {
+      "id": "wh_01j4k8x2n9z3v7b6m5",
+      "url": "https://yourapp.com/webhooks/koax",
+      "events": ["anime.new", "anime.episode_aired"],
+      "status": "active",
+      "created_at": "2024-10-15T09:22:00Z"
+    }
+  ]
+}
+```
+
+**Delete a webhook:**
+
+```bash
+curl -X DELETE "https://api.koax.dev/v1/webhooks/wh_01j4k8x2n9z3v7b6m5" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+A successful deletion returns `204 No Content` with an empty body.
+
+<Note>
+  The Koax Anime API uses an **exponential backoff retry policy** for failed deliveries. If your endpoint returns a non-`2xx` status code (or times out), Koax will retry the delivery up to **3 times**, with delays of approximately 30 seconds, 5 minutes, and 30 minutes between attempts. After 3 failed retries, the event is dropped and the webhook is marked as `degraded` in your dashboard. Make your webhook handler idempotent — each event payload includes the same `webhook_id` and `timestamp`, so you can safely deduplicate retried deliveries.
+</Note>
+
+<Tip>
+  For local development and testing, use **[ngrok](https://ngrok.com)** to create a public HTTPS tunnel to your local server. Run `ngrok http 3000` (replacing `3000` with your local port), then register the generated `https://xxxx.ngrok-free.app` URL as your webhook endpoint. The ngrok web inspector at `http://localhost:4040` lets you inspect every incoming payload and replay requests — which is invaluable when debugging your signature verification logic.
+</Tip>

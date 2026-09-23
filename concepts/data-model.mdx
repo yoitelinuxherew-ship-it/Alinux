@@ -1,0 +1,317 @@
+---
+title: "Koax API Data Model: Anime, Manga & Characters"
+sidebarTitle: "Data Model"
+description: "Understand the core data types returned by Koax Anime API: Anime, Manga, Character, Genre, and Season objects with all their fields."
+---
+
+The Koax Anime API revolves around five core resource types: **Anime**, **Manga**, **Character**, **Genre**, and **Season**. Every endpoint returns one or more of these objects — either as a single resource or wrapped in a paginated list. Understanding the shape of each object helps you build integrations quickly and avoid unexpected `null` values in your UI. The sections below document every field, its type, and when it might be absent.
+
+## Anime Object
+
+An Anime object represents a single anime entry, including metadata sourced from MyAnimeList. You'll encounter this object on list endpoints, detail endpoints, and nested inside Season responses.
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the anime entry.
+</ResponseField>
+
+<ResponseField name="title" type="string" required>
+  Primary title in romaji (romanized Japanese).
+</ResponseField>
+
+<ResponseField name="title_english" type="string">
+  Official English-language title. May be `null` if no official English title exists.
+</ResponseField>
+
+<ResponseField name="title_japanese" type="string">
+  Title in native Japanese script (kanji/kana).
+</ResponseField>
+
+<ResponseField name="type" type="string" required>
+  Broadcast format. One of: `TV`, `Movie`, `OVA`, `ONA`, `Special`.
+</ResponseField>
+
+<ResponseField name="episodes" type="integer">
+  Total episode count. Returns `null` for currently-airing or unannounced series.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Current airing status. One of: `Airing`, `Finished`, `Not Yet Aired`.
+</ResponseField>
+
+<ResponseField name="score" type="number" required>
+  Weighted community score on a scale of `0.0` to `10.0`.
+</ResponseField>
+
+<ResponseField name="genres" type="array" required>
+  List of [Genre objects](#genre-object) associated with this anime.
+</ResponseField>
+
+<ResponseField name="synopsis" type="string">
+  Plot summary. May be `null` for entries without a synopsis.
+</ResponseField>
+
+<ResponseField name="aired" type="object">
+  Object containing `start` (ISO 8601 date string) and `end` (ISO 8601 date string or `null` if still airing) fields.
+</ResponseField>
+
+<ResponseField name="studios" type="array">
+  Array of studio name strings responsible for production.
+</ResponseField>
+
+<ResponseField name="image_url" type="string" required>
+  URL to the cover/poster image.
+</ResponseField>
+
+<ResponseField name="trailer_url" type="string">
+  YouTube trailer URL. Returns `null` if no trailer is available.
+</ResponseField>
+
+### Anime Object Example
+
+```json
+{
+  "id": "anime_20",
+  "title": "Naruto",
+  "title_english": "Naruto",
+  "title_japanese": "ナルト",
+  "type": "TV",
+  "episodes": 220,
+  "status": "Finished",
+  "score": 7.98,
+  "genres": [
+    { "id": "genre_1", "name": "Action" },
+    { "id": "genre_10", "name": "Fantasy" }
+  ],
+  "synopsis": "Naruto Uzumaki, a mischievous adolescent ninja...",
+  "aired": {
+    "start": "2002-10-03",
+    "end": "2007-02-08"
+  },
+  "studios": ["Pierrot"],
+  "image_url": "https://cdn.koax.dev/anime/20/cover.jpg",
+  "trailer_url": "https://www.youtube.com/watch?v=example"
+}
+```
+
+---
+
+## Manga Object
+
+A Manga object represents a single manga entry. The `type` field distinguishes between different publication formats, and chapter/volume counts follow the same nullable pattern as anime episodes.
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the manga entry.
+</ResponseField>
+
+<ResponseField name="title" type="string" required>
+  Primary title in romaji.
+</ResponseField>
+
+<ResponseField name="title_english" type="string">
+  Official English title. May be `null`.
+</ResponseField>
+
+<ResponseField name="title_japanese" type="string">
+  Title in native Japanese script.
+</ResponseField>
+
+<ResponseField name="type" type="string" required>
+  Publication format. One of: `Manga`, `Novel`, `One-shot`, `Doujin`.
+</ResponseField>
+
+<ResponseField name="chapters" type="integer">
+  Total chapter count. Returns `null` for ongoing or unconfirmed series.
+</ResponseField>
+
+<ResponseField name="volumes" type="integer">
+  Total volume count. Returns `null` for ongoing or unconfirmed series.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Publication status. One of: `Publishing`, `Finished`, `Not Yet Published`, `Discontinued`.
+</ResponseField>
+
+<ResponseField name="score" type="number" required>
+  Community score on a scale of `0.0` to `10.0`.
+</ResponseField>
+
+<ResponseField name="genres" type="array" required>
+  List of [Genre objects](#genre-object) associated with this manga.
+</ResponseField>
+
+<ResponseField name="synopsis" type="string">
+  Plot summary. May be `null`.
+</ResponseField>
+
+<ResponseField name="published" type="object">
+  Object containing `start` (ISO 8601 date string) and `end` (ISO 8601 date string or `null`) fields indicating the publication run.
+</ResponseField>
+
+<ResponseField name="image_url" type="string" required>
+  URL to the cover image.
+</ResponseField>
+
+### Manga Object Example
+
+```json
+{
+  "id": "manga_1535",
+  "title": "Death Note",
+  "title_english": "Death Note",
+  "title_japanese": "デスノート",
+  "type": "Manga",
+  "chapters": 108,
+  "volumes": 12,
+  "status": "Finished",
+  "score": 8.67,
+  "genres": [
+    { "id": "genre_7", "name": "Mystery" },
+    { "id": "genre_40", "name": "Psychological" }
+  ],
+  "synopsis": "Ryuk, a god of death, drops his Death Note...",
+  "published": {
+    "start": "2003-12-01",
+    "end": "2006-05-15"
+  },
+  "image_url": "https://cdn.koax.dev/manga/1535/cover.jpg"
+}
+```
+
+---
+
+## Character Object
+
+A Character object describes an individual anime or manga character. It includes biographical information, their role in the story, and a list of voice actors across different language dubs.
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the character.
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Character's full name in romaji.
+</ResponseField>
+
+<ResponseField name="name_kanji" type="string">
+  Character's name in Japanese kanji/kana. May be `null`.
+</ResponseField>
+
+<ResponseField name="about" type="string">
+  Biographical description. May be `null`.
+</ResponseField>
+
+<ResponseField name="role" type="string" required>
+  Role in the story. One of: `Main`, `Supporting`.
+</ResponseField>
+
+<ResponseField name="image_url" type="string" required>
+  URL to the character's image.
+</ResponseField>
+
+<ResponseField name="anime" type="array" required>
+  Array of Anime objects in which this character appears.
+</ResponseField>
+
+<ResponseField name="voice_actors" type="array" required>
+  Array of voice actor objects. Each entry contains:
+  - `name` (string) — voice actor's full name
+  - `language` (string) — language of the performance (e.g. `Japanese`, `English`)
+  - `image_url` (string) — photo of the voice actor
+</ResponseField>
+
+### Character Object Example
+
+```json
+{
+  "id": "char_40",
+  "name": "Spike Spiegel",
+  "name_kanji": "スパイク・スピーゲル",
+  "about": "A bounty hunter travelling through space...",
+  "role": "Main",
+  "image_url": "https://cdn.koax.dev/characters/40/image.jpg",
+  "anime": [
+    { "id": "anime_1", "title": "Cowboy Bebop" }
+  ],
+  "voice_actors": [
+    {
+      "name": "Yamadera Kouichi",
+      "language": "Japanese",
+      "image_url": "https://cdn.koax.dev/va/kouichi.jpg"
+    },
+    {
+      "name": "Steve Blum",
+      "language": "English",
+      "image_url": "https://cdn.koax.dev/va/steveblum.jpg"
+    }
+  ]
+}
+```
+
+---
+
+## Genre Object
+
+Genre objects are lightweight labels attached to Anime and Manga entries. You can also query genres directly to discover how many titles belong to each category.
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the genre.
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Display name of the genre (e.g. `Action`, `Romance`, `Sci-Fi`).
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Short description of what the genre encompasses. May be `null`.
+</ResponseField>
+
+<ResponseField name="count" type="integer" required>
+  Number of anime entries tagged with this genre in the database.
+</ResponseField>
+
+### Genre Object Example
+
+```json
+{
+  "id": "genre_1",
+  "name": "Action",
+  "description": "Titles featuring intense physical conflict and fast-paced sequences.",
+  "count": 3241
+}
+```
+
+---
+
+## Season Object
+
+A Season object groups all anime that aired in a specific seasonal window. Seasons follow the standard Japanese broadcast calendar: **winter** (January–March), **spring** (April–June), **summer** (July–September), and **fall** (October–December).
+
+<ResponseField name="year" type="integer" required>
+  The calendar year of the season (e.g. `2024`).
+</ResponseField>
+
+<ResponseField name="season" type="string" required>
+  The season name. One of: `winter`, `spring`, `summer`, `fall`.
+</ResponseField>
+
+<ResponseField name="anime" type="array" required>
+  Paginated array of [Anime objects](#anime-object) that premiered in this season.
+</ResponseField>
+
+### Season Object Example
+
+```json
+{
+  "year": 2024,
+  "season": "winter",
+  "anime": [
+    {
+      "id": "anime_55701",
+      "title": "Mushoku Tensei II",
+      "type": "TV",
+      "episodes": 12,
+      "status": "Finished",
+      "score": 8.54
+    }
+  ]
+}
+```

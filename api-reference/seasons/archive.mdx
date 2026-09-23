@@ -1,0 +1,135 @@
+---
+title: "GET /seasons/:year/:season — Season Archive"
+sidebarTitle: "Season Archive"
+description: "GET /seasons/:year/:season — Retrieve anime from any historical season by specifying year and season name."
+---
+
+The **Season Archive** endpoint gives you access to the complete catalogue of anime from any historical broadcast season, identified by year and season name. Whether you're building a retrospective timeline, a decade-by-decade explorer, or a "throwback" feature, this endpoint lets you page through every season on record. Data availability spans from the current season back to the 1960s, though metadata completeness naturally decreases for older entries.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/seasons/:year/:season
+```
+
+## Path Parameters
+
+<ParamField path="year" type="integer" required>
+  The four-digit year of the season to retrieve (e.g., `2023`, `1999`, `1986`). Data is available as far back as the 1960s, though completeness varies for older seasons.
+</ParamField>
+
+<ParamField path="season" type="string" required>
+  The name of the season. Must be one of:
+
+  - `winter` — January through March
+  - `spring` — April through June
+  - `summer` — July through September
+  - `fall` — October through December
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="page" type="integer" default="1">
+  Page number of the result set to return.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="25">
+  Number of anime to return per page. Maximum allowed value is **50**.
+</ParamField>
+
+<ParamField query="order_by" type="string">
+  Field to sort results by. Accepted values:
+
+  - `score` — Sort by average community score
+  - `title` — Sort alphabetically
+  - `aired` — Sort by original air date within the season
+</ParamField>
+
+<ParamField query="sort" type="string">
+  Sort direction. Accepted values: `asc`, `desc`.
+</ParamField>
+
+<ParamField query="filter" type="string">
+  Filter by anime format. Accepted values: `tv`, `movie`, `ova`, `ona`, `special`.
+</ParamField>
+
+## Example Request
+
+```
+GET https://api.koax.dev/v1/seasons/2023/fall
+```
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.koax.dev/v1/seasons/2023/fall?order_by=score&sort=desc&limit=25" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "season": "fall",
+  "year": 2023,
+  "data": [
+    {
+      "id": 51009,
+      "title": "Frieren: Beyond Journey's End",
+      "title_japanese": "葬送のフリーレン",
+      "image_url": "https://cdn.koax.dev/anime/51009.jpg",
+      "score": 9.01,
+      "episodes": 28,
+      "status": "Finished Airing",
+      "aired": "2023-09-29",
+      "format": "tv",
+      "studio": "Madhouse",
+      "genres": ["Adventure", "Drama", "Fantasy"]
+    },
+    {
+      "id": 49596,
+      "title": "Spy x Family Season 2",
+      "title_japanese": "SPY×FAMILY Season 2",
+      "image_url": "https://cdn.koax.dev/anime/49596.jpg",
+      "score": 8.31,
+      "episodes": 12,
+      "status": "Finished Airing",
+      "aired": "2023-10-07",
+      "format": "tv",
+      "studio": "Wit Studio, CloverWorks",
+      "genres": ["Action", "Comedy", "Slice of Life"]
+    },
+    {
+      "id": 50172,
+      "title": "Hitori no Shita: The Outcast 4th Season",
+      "title_japanese": "一人之下 The Outcast 4th Season",
+      "image_url": "https://cdn.koax.dev/anime/50172.jpg",
+      "score": 7.98,
+      "episodes": 12,
+      "status": "Finished Airing",
+      "aired": "2023-10-05",
+      "format": "tv",
+      "studio": "Samsara Animation Studio",
+      "genres": ["Action", "Martial Arts", "Supernatural"]
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 18,
+    "per_page": 25,
+    "total": 434,
+    "has_next_page": true
+  }
+}
+```
+
+</CodeGroup>
+
+<Note>
+  The Koax archive contains season data going back to the **1960s**, covering the earliest eras of Japanese animation. However, entries from seasons prior to the mid-1990s may have incomplete metadata — fields such as `score`, `episodes`, `studio`, and `image_url` may be `null` for titles from older seasons where community records are sparse.
+</Note>
+
+<Tip>
+  The season archive is well-suited for **historical exploration features**. Use `limit=50` and iterate through `pagination.last_page` to walk an entire season's catalogue programmatically. Combine with `order_by=aired&sort=asc` to traverse titles in broadcast order — great for building timelines, "anime history" feeds, or decade retrospectives. For example, try `GET /seasons/1997/fall` to explore the legendary season that produced *Berserk*, *Princess Mononoke*, and *Utena*.
+</Tip>

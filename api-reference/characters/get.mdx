@@ -1,0 +1,171 @@
+---
+title: "GET /characters/:id — Character Details"
+sidebarTitle: "Get Character"
+description: "GET /characters/:id — Retrieve full profile for a character including biography, appearances, voice actors across all languages."
+---
+
+The **Get Character** endpoint returns the complete profile for a single anime or manga character, identified by their unique ID. The response includes a detailed biography, every anime and manga title the character appears in alongside their role, and a full list of voice actors across all dubbed and subbed language releases.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/characters/:id
+```
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique numeric identifier of the character. You can obtain character IDs from the [List Characters](/api-reference/characters/list) or [Search Characters](/api-reference/characters/search) endpoints.
+</ParamField>
+
+## Response Fields
+
+<ResponseField name="id" type="integer">
+  Unique identifier for the character.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The character's full name in romanized form (e.g., `"Naruto Uzumaki"`).
+</ResponseField>
+
+<ResponseField name="name_kanji" type="string">
+  The character's name in Japanese kanji or kana script. Returns `null` for non-Japanese productions.
+</ResponseField>
+
+<ResponseField name="about" type="string">
+  A detailed biography of the character, covering their background, personality, and role in the story. May include spoilers. Returns `null` if no biography is available.
+</ResponseField>
+
+<ResponseField name="image_url" type="string">
+  URL of the character's primary portrait image hosted on the Koax CDN.
+</ResponseField>
+
+<ResponseField name="favorites" type="integer">
+  Total number of users who have marked this character as a favorite.
+</ResponseField>
+
+<ResponseField name="anime" type="array">
+  List of anime titles in which this character appears.
+
+  <Expandable title="Anime appearance object">
+    <ResponseField name="id" type="integer">
+      Unique ID of the anime title.
+    </ResponseField>
+    <ResponseField name="title" type="string">
+      The anime title in its original romanized form.
+    </ResponseField>
+    <ResponseField name="image_url" type="string">
+      Cover image URL for the anime title.
+    </ResponseField>
+    <ResponseField name="role" type="string">
+      The character's role in this title. Either `"Main"` or `"Supporting"`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="manga" type="array">
+  List of manga titles in which this character appears.
+
+  <Expandable title="Manga appearance object">
+    <ResponseField name="id" type="integer">
+      Unique ID of the manga title.
+    </ResponseField>
+    <ResponseField name="title" type="string">
+      The manga title in its original romanized form.
+    </ResponseField>
+    <ResponseField name="image_url" type="string">
+      Cover image URL for the manga title.
+    </ResponseField>
+    <ResponseField name="role" type="string">
+      The character's role in this title. Either `"Main"` or `"Supporting"`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="voice_actors" type="array">
+  List of voice actors who have portrayed this character, grouped by language.
+
+  <Expandable title="Voice actor object">
+    <ResponseField name="name" type="string">
+      Full name of the voice actor.
+    </ResponseField>
+    <ResponseField name="language" type="string">
+      Language of the performance (e.g., `"Japanese"`, `"English"`, `"Spanish"`).
+    </ResponseField>
+    <ResponseField name="image_url" type="string">
+      Photo URL of the voice actor.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  The `role` field indicates whether a character is a **Main** protagonist/antagonist central to the story, or a **Supporting** character with a more limited narrative role. This distinction is title-specific — a character may be `Main` in one series and `Supporting` in a spin-off or crossover.
+</Note>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.koax.dev/v1/characters/17" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "id": 17,
+  "name": "Naruto Uzumaki",
+  "name_kanji": "うずまきナルト",
+  "about": "Naruto Uzumaki is the main protagonist of the Naruto series. He is a young ninja from Konohagakure who was shunned by his peers due to the Nine-Tailed Fox sealed within him. Determined to become Hokage, the village's strongest leader, Naruto's journey is defined by perseverance, friendship, and an unbreakable will. His signature technique is the Shadow Clone Jutsu, and he is the wielder of the powerful Sage Mode and Six Paths chakra.",
+  "image_url": "https://cdn.koax.dev/characters/17.jpg",
+  "favorites": 219095,
+  "anime": [
+    {
+      "id": 20,
+      "title": "Naruto",
+      "image_url": "https://cdn.koax.dev/anime/20.jpg",
+      "role": "Main"
+    },
+    {
+      "id": 1735,
+      "title": "Naruto: Shippuuden",
+      "image_url": "https://cdn.koax.dev/anime/1735.jpg",
+      "role": "Main"
+    },
+    {
+      "id": 34566,
+      "title": "Boruto: Naruto Next Generations",
+      "image_url": "https://cdn.koax.dev/anime/34566.jpg",
+      "role": "Supporting"
+    }
+  ],
+  "manga": [
+    {
+      "id": 11,
+      "title": "Naruto",
+      "image_url": "https://cdn.koax.dev/manga/11.jpg",
+      "role": "Main"
+    }
+  ],
+  "voice_actors": [
+    {
+      "name": "Junko Takeuchi",
+      "language": "Japanese",
+      "image_url": "https://cdn.koax.dev/people/junko_takeuchi.jpg"
+    },
+    {
+      "name": "Maile Flanagan",
+      "language": "English",
+      "image_url": "https://cdn.koax.dev/people/maile_flanagan.jpg"
+    },
+    {
+      "name": "Cristina Hernandez",
+      "language": "Spanish",
+      "image_url": "https://cdn.koax.dev/people/cristina_hernandez.jpg"
+    }
+  ]
+}
+```
+
+</CodeGroup>

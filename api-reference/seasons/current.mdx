@@ -1,0 +1,125 @@
+---
+title: "GET /seasons/current — Current Season Anime"
+sidebarTitle: "Current Season"
+description: "GET /seasons/current — Get all anime airing in the current season, sorted by score or popularity."
+---
+
+The **Current Season** endpoint returns all anime titles airing during the current broadcast season. Seasons are determined automatically by the current calendar date and follow the standard Japanese broadcast calendar: Winter, Spring, Summer, and Fall. This endpoint is ideal for building "Airing Now" dashboards, season overview pages, or real-time popularity rankings.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/seasons/current
+```
+
+## Query Parameters
+
+<ParamField query="page" type="integer" default="1">
+  Page number of the result set to return.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="25">
+  Number of anime to return per page. Maximum allowed value is **50**.
+</ParamField>
+
+<ParamField query="order_by" type="string">
+  Field to sort results by. Accepted values:
+
+  - `score` — Sort by current average community score
+  - `popularity` — Sort by number of users tracking the title
+  - `title` — Sort alphabetically
+</ParamField>
+
+<ParamField query="sort" type="string">
+  Sort direction. Accepted values: `asc`, `desc`.
+</ParamField>
+
+<ParamField query="filter" type="string">
+  Filter results to a specific anime format. Accepted values:
+
+  - `tv` — Regular TV broadcast series
+  - `movie` — Theatrical films
+  - `ova` — Original Video Animation
+  - `ona` — Original Net Animation (streaming-first)
+  - `special` — Special episodes or shorts
+</ParamField>
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.koax.dev/v1/seasons/current?order_by=score&sort=desc&filter=tv" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "season": "fall",
+  "year": 2024,
+  "data": [
+    {
+      "id": 52991,
+      "title": "Dandadan",
+      "title_japanese": "ダンダダン",
+      "image_url": "https://cdn.koax.dev/anime/52991.jpg",
+      "score": 8.71,
+      "episodes": 12,
+      "status": "Currently Airing",
+      "aired": "2024-10-04",
+      "format": "tv",
+      "genres": ["Action", "Comedy", "Sci-Fi", "Supernatural"],
+      "popularity_rank": 1
+    },
+    {
+      "id": 55701,
+      "title": "Bleach: Thousand-Year Blood War - The Conflict",
+      "title_japanese": "BLEACH 千年血戦篇-相剋譚-",
+      "image_url": "https://cdn.koax.dev/anime/55701.jpg",
+      "score": 8.93,
+      "episodes": 13,
+      "status": "Currently Airing",
+      "aired": "2024-10-05",
+      "format": "tv",
+      "genres": ["Action", "Adventure", "Supernatural"],
+      "popularity_rank": 2
+    },
+    {
+      "id": 53887,
+      "title": "Mushishi Zoku Shou",
+      "title_japanese": "蟲師 続章",
+      "image_url": "https://cdn.koax.dev/anime/53887.jpg",
+      "score": 8.44,
+      "episodes": 10,
+      "status": "Currently Airing",
+      "aired": "2024-10-11",
+      "format": "tv",
+      "genres": ["Adventure", "Fantasy", "Mystery", "Slice of Life"],
+      "popularity_rank": 3
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 14,
+    "per_page": 25,
+    "total": 334,
+    "has_next_page": true
+  }
+}
+```
+
+</CodeGroup>
+
+<Note>
+  The current season is determined by the calendar date of your request, using the following boundaries:
+
+  | Season | Months       |
+  |--------|--------------|
+  | Winter | January – March |
+  | Spring | April – June |
+  | Summer | July – September |
+  | Fall   | October – December |
+
+  Season boundaries are based on UTC time. If your application is timezone-sensitive, consider confirming the `season` and `year` fields from the response rather than inferring them client-side.
+</Note>

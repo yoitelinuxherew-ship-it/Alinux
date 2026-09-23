@@ -1,0 +1,135 @@
+---
+title: "API Rate Limits and Usage Quotas"
+sidebarTitle: "Rate Limits"
+description: "Understand Koax Anime API rate limits, response headers for tracking usage, and best practices to avoid hitting limits."
+---
+
+Every plan on the Koax Anime API comes with a rate limit that governs how many requests you can make per minute and per day. These limits exist to keep the service fast and reliable for everyone. When you exceed a limit, the API returns a `429 RATE_LIMITED` error and tells you exactly how long to wait before retrying. This page covers the limits for each plan, how to read the rate-limit headers on every response, and patterns for staying well under your quota.
+
+## Rate Limit Tiers
+
+Your rate limit is determined by the plan associated with your API key. Limits reset at the top of each minute (per-minute) and at midnight UTC (per-day).
+
+| Plan | Requests / Day | Requests / Minute |
+|---|---|---|
+| **Free** | 1,000 | 10 |
+| **Starter** | 50,000 | 60 |
+| **Pro** | 500,000 | 300 |
+| **Enterprise** | Unlimited | Custom |
+
+<Note>
+  Enterprise plans negotiate per-minute limits directly with the Koax team. [Contact sales](mailto:sales@koax.dev) to discuss your requirements.
+</Note>
+
+## Rate Limit Headers
+
+Every response from the API — successful or not — includes three headers that let you monitor your consumption in real time. Reading these headers proactively lets you throttle your own requests before the API is forced to reject them.
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 847
+X-RateLimit-Reset: 1717027200
+```
+
+| Header | Description |
+|---|---|
+| `X-RateLimit-Limit` | Your total daily request allowance for the current plan. |
+| `X-RateLimit-Remaining` | How many requests you have left in the current daily window. |
+| `X-RateLimit-Reset` | Unix timestamp (UTC) at which `X-RateLimit-Remaining` resets to `X-RateLimit-Limit`. |
+
+To convert `X-RateLimit-Reset` to a human-readable time in JavaScript:
+
+```javascript
+const resetAt = new Date(parseInt(headers["X-RateLimit-Reset"]) * 1000);
+console.log(`Quota resets at ${resetAt.toUTCString()}`);
+```
+
+## Handling 429 Errors
+
+When you exceed the per-minute or per-day limit, the API responds with HTTP `429` and includes a `Retry-After` header indicating the number of seconds you must wait before making another request. Your client should always respect this header rather than retrying immediately.
+
+<CodeGroup>
+
+```javascript JavaScript
+async function fetchWithRetry(url, options, maxRetries = 3) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const response = await fetch(url, options);
+
+    if (response.status === 429) {
+      const retryAfter = parseInt(response.headers.get("Retry-After") ?? "5");
+      console.warn(`Rate limited. Retrying in ${retryAfter} seconds...`);
+      await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
+      continue;
+    }
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  throw new Error("Max retries exceeded after rate limiting.");
+}
+
+// Usage
+const data = await fetchWithRetry(
+  "https://api.koax.dev/v1/anime?page=1&limit=25",
+  { headers: { Authorization: "Bearer YOUR_API_KEY" } }
+);
+```
+
+```python Python
+import time
+import requests
+
+def fetch_with_retry(url, headers, max_retries=3):
+    for attempt in range(max_retries):
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 429:
+            retry_after = int(response.headers.get("Retry-After", 5))
+            print(f"Rate limited. Retrying in {retry_after}s...")
+            time.sleep(retry_after)
+            continue
+
+        response.raise_for_status()
+        return response.json()
+
+    raise Exception("Max retries exceeded after rate limiting.")
+
+# Usage
+data = fetch_with_retry(
+    "https://api.koax.dev/v1/anime?page=1&limit=25",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+```
+
+</CodeGroup>
+
+<Warning>
+  Never fire requests in a tight loop without any delay. Even if each individual request succeeds, bursting hundreds of calls in seconds will exhaust your per-minute allowance almost instantly and cascade into 429 errors that stall your entire pipeline.
+</Warning>
+
+## Best Practices
+
+Follow these patterns to stay comfortably under your quota and build more resilient applications.
+
+<Steps>
+  <Step title="Cache responses locally">
+    Anime and manga metadata changes infrequently. Store responses in a local database or in-memory cache and set a TTL of at least one hour. This alone can cut your request volume by 80–90% for read-heavy applications.
+  </Step>
+  <Step title="Read headers on every response">
+    Check `X-RateLimit-Remaining` after every request. If it drops below a threshold you define (e.g. 50 remaining), introduce a deliberate pause before the next call.
+  </Step>
+  <Step title="Use the maximum page size">
+    When paginating, always set `limit=50`. This halves the number of requests compared to the default of 25, directly preserving your daily quota.
+  </Step>
+  <Step title="Implement exponential back-off">
+    If you receive multiple 429 responses in sequence, double your wait time on each retry rather than using the static `Retry-After` value. This prevents a thundering-herd effect when quota resets.
+  </Step>
+</Steps>
+
+<Tip>
+  Cache your responses locally — especially for reference data like genres, which rarely changes. A simple key-value store or even a JSON file on disk can save hundreds of redundant API calls per day and keeps your application fast even when offline.
+</Tip>

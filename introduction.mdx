@@ -1,0 +1,55 @@
+---
+title: "Koax Anime API: Your Gateway to Anime Data"
+sidebarTitle: "Introduction"
+description: "Koax Anime API gives you instant access to anime, manga, characters, genres, and season data through a simple REST API."
+---
+
+Koax Anime API is a RESTful service that puts the full breadth of anime culture at your fingertips. Whether you're building a recommendation engine, a fan site, a mobile companion app, or an automated watchlist tracker, Koax gives you structured, up-to-date data on thousands of anime titles, manga series, beloved characters, genres, and seasonal release schedules — all through clean, predictable HTTP endpoints.
+
+## Explore the Docs
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Make your first API request in under 5 minutes. Get your key, fire a `curl` command, and see live data instantly.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Learn how to authenticate every request with your API key and keep your credentials secure.
+  </Card>
+  <Card title="Anime — List Endpoint" icon="list" href="/api-reference/anime/list">
+    Browse the full anime catalogue with filtering, sorting, and pagination built right in.
+  </Card>
+  <Card title="Search Anime Guide" icon="magnifying-glass" href="/guides/search-anime">
+    Master full-text search, genre filters, and score ranges to surface exactly the titles you need.
+  </Card>
+</CardGroup>
+
+## What You Can Do
+
+With Koax Anime API you can:
+
+- **Search anime titles** by name, genre, release year, studio, or score range
+- **Browse manga series** including volumes, chapters, authors, and serialization status
+- **Retrieve character profiles** with descriptions, voice actors, and appearances across multiple series
+- **Explore seasonal anime** to see what's airing in any given season and year
+- **Filter by genre** to find action, romance, horror, isekai, or any of dozens of other categories
+- **Fetch top-ranked and trending titles** using pre-built leaderboard endpoints
+- **Get detailed episode information** including air dates, filler flags, and synopses
+- **Look up studios and producers** along with their full catalogues of work
+
+<Note>
+  The free tier includes **1,000 requests per day**. This is enough to prototype, build hobby projects, and explore the full API surface. When you're ready to scale, check out the [pricing page](https://koax.dev/pricing) for higher-volume plans.
+</Note>
+
+## Base URL
+
+Every request you make to the Koax Anime API must be directed to the following base URL. All endpoints documented in this reference are relative to this root.
+
+```
+https://api.koax.dev/v1
+```
+
+For example, to reach the top anime endpoint you would call:
+
+```
+https://api.koax.dev/v1/anime/top
+```

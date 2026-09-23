@@ -1,0 +1,196 @@
+---
+title: "GET /anime/search — Search Anime by Title"
+sidebarTitle: "Search Anime"
+description: "GET /anime/search — Search anime by title keyword with optional filters for type, status, year, genre, and score range."
+---
+
+The `/anime/search` endpoint lets you perform keyword searches against anime titles in the Koax database. Supply a search term via the `q` parameter and optionally combine it with filters for type, airing status, release year, season, genre, and score range to return precisely the results your users are looking for.
+
+## Endpoint
+
+```
+GET https://api.koax.dev/v1/anime/search
+```
+
+## Query Parameters
+
+<ParamField query="q" type="string" required>
+  The title keyword to search for (e.g. `attack on titan`, `naruto`). Searches across primary, English, and Japanese titles. Must be at least **2 characters** long.
+</ParamField>
+
+<ParamField query="type" type="string">
+  Restrict results to a specific format. One of `TV`, `Movie`, `OVA`, `ONA`, or `Special`.
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by airing status. One of `airing`, `finished`, or `upcoming`.
+</ParamField>
+
+<ParamField query="genre_id" type="string">
+  Comma-separated genre IDs to filter by (e.g. `1,14`). Results must match **all** supplied IDs. See [List Genres](/api-reference/genres/list) for valid values.
+</ParamField>
+
+<ParamField query="year" type="integer">
+  Restrict results to anime that first aired in this calendar year (e.g. `2013`).
+</ParamField>
+
+<ParamField query="season" type="string">
+  Filter by the season in which the anime premiered. One of `winter`, `spring`, `summer`, or `fall`. Use together with `year` for a precise season filter (e.g. `year=2013&season=spring`).
+</ParamField>
+
+<ParamField query="score_min" type="number">
+  Minimum community score (inclusive). Must be between `1.0` and `10.0`.
+</ParamField>
+
+<ParamField query="score_max" type="number">
+  Maximum community score (inclusive). Must be between `1.0` and `10.0` and greater than or equal to `score_min`.
+</ParamField>
+
+<ParamField query="order_by" type="string">
+  Field to sort results by. One of `score`, `title`, `episodes`, or `aired`.
+</ParamField>
+
+<ParamField query="sort" type="string" default="desc">
+  Sort direction. Either `asc` or `desc`.
+</ParamField>
+
+<ParamField query="page" type="integer" default={1}>
+  The page number to retrieve.
+</ParamField>
+
+<ParamField query="limit" type="integer" default={25}>
+  Number of results per page. Maximum is `50`.
+</ParamField>
+
+## Example Request
+
+```
+GET https://api.koax.dev/v1/anime/search?q=attack+on+titan&type=TV&score_min=8.0
+```
+
+## Example Response
+
+```json
+{
+  "query": "attack on titan",
+  "data": [
+    {
+      "id": 16498,
+      "title": "Shingeki no Kyojin",
+      "title_english": "Attack on Titan",
+      "title_japanese": "進撃の巨人",
+      "type": "TV",
+      "episodes": 25,
+      "status": "finished",
+      "score": 8.54,
+      "rank": 98,
+      "popularity": 3,
+      "image_url": "https://cdn.koax.dev/images/anime/16498.jpg"
+    },
+    {
+      "id": 25777,
+      "title": "Shingeki no Kyojin Season 2",
+      "title_english": "Attack on Titan Season 2",
+      "title_japanese": "進撃の巨人 Season 2",
+      "type": "TV",
+      "episodes": 12,
+      "status": "finished",
+      "score": 8.45,
+      "rank": 127,
+      "popularity": 10,
+      "image_url": "https://cdn.koax.dev/images/anime/25777.jpg"
+    },
+    {
+      "id": 35760,
+      "title": "Shingeki no Kyojin Season 3",
+      "title_english": "Attack on Titan Season 3",
+      "title_japanese": "進撃の巨人 Season 3",
+      "type": "TV",
+      "episodes": 22,
+      "status": "finished",
+      "score": 8.73,
+      "rank": 44,
+      "popularity": 8,
+      "image_url": "https://cdn.koax.dev/images/anime/35760.jpg"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "per_page": 25,
+    "total_items": 7,
+    "total_pages": 1,
+    "has_next_page": false
+  }
+}
+```
+
+## Code Examples
+
+<CodeGroup>
+
+```bash curl
+curl --request GET \
+  --url "https://api.koax.dev/v1/anime/search?q=attack%2Bon%2Btitan&type=TV&score_min=8.0" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  q: "attack on titan",
+  type: "TV",
+  score_min: "8.0",
+});
+
+const response = await fetch(
+  `https://api.koax.dev/v1/anime/search?${params}`,
+  {
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+const { data, pagination } = await response.json();
+console.log(`Found ${pagination.total_items} results`);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.koax.dev/v1/anime/search",
+    params={
+        "q": "attack on titan",
+        "type": "TV",
+        "score_min": 8.0,
+    },
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+
+body = response.json()
+for anime in body["data"]:
+    print(anime["title_english"], "-", anime["score"])
+```
+
+</CodeGroup>
+
+<Tip>
+  Always URL-encode your search query when constructing requests manually. Spaces should be encoded as `%20` or `+`. Most HTTP client libraries (like `fetch`, `requests`, or `axios`) handle this automatically when you pass parameters as an object or dictionary — avoid concatenating raw strings into the URL.
+</Tip>
+
+<Note>
+  The search engine uses **partial and fuzzy matching**, so queries like `titan` or `atack titan` (with a typo) will still surface relevant results. Results are ranked by relevance first; apply `order_by` to override with a different sort field. Exact title matches are always ranked highest.
+</Note>
+
+<Warning>
+  The `q` parameter is required and must be at least 2 characters long. Omitting it or passing a single character will return a `400 Bad Request`:
+
+  ```json
+  {
+    "error": {
+      "code": "INVALID_QUERY",
+      "message": "The 'q' parameter is required and must be at least 2 characters."
+    }
+  }
+  ```
+</Warning>
