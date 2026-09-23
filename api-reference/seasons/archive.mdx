@@ -1,7 +1,7 @@
 ---
-title: "GET /seasons/:year/:season — Season Archive"
+title: "Browse Historical Seasons — Koax Anime API Reference"
 sidebarTitle: "Season Archive"
-description: "GET /seasons/:year/:season — Retrieve anime from any historical season by specifying year and season name."
+description: "Access the complete Koax anime archive for any historical broadcast season by year and season name, with coverage going back to the 1960s."
 ---
 
 The **Season Archive** endpoint gives you access to the complete catalogue of anime from any historical broadcast season, identified by year and season name. Whether you're building a retrospective timeline, a decade-by-decade explorer, or a "throwback" feature, this endpoint lets you page through every season on record. Data availability spans from the current season back to the 1960s, though metadata completeness naturally decreases for older entries.
@@ -52,12 +52,6 @@ GET https://api.koax.dev/v1/seasons/:year/:season
 <ParamField query="filter" type="string">
   Filter by anime format. Accepted values: `tv`, `movie`, `ova`, `ona`, `special`.
 </ParamField>
-
-## Example Request
-
-```
-GET https://api.koax.dev/v1/seasons/2023/fall
-```
 
 ## Examples
 

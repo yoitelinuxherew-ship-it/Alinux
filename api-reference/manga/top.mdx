@@ -1,7 +1,7 @@
 ---
-title: "GET /manga/top — Top-Rated Manga"
+title: "Top-Rated Manga — Rankings by Score and Popularity"
 sidebarTitle: "Top Manga"
-description: "GET /manga/top — Retrieve the highest-rated manga ranked by community score, filterable by type and ranking category."
+description: "Retrieve the highest-rated manga titles ranked by community score. Filter by publication type or switch to popularity and favorites-based ranking methods."
 ---
 
 The `/manga/top` endpoint returns manga ordered by descending community score, giving you a ranked list of the most acclaimed titles in the database. An optional `filter` parameter lets you scope the ranking to a specific format — such as novels, manhwa, or manhua — or switch to an alternative ranking method like popularity or all-time favorites. Use this endpoint to power leaderboards, featured carousels, or genre-specific top lists.
@@ -44,6 +44,39 @@ GET https://api.koax.dev/v1/manga/top
 <Tip>
   Use `filter=novels` to retrieve a top chart scoped exclusively to light novels and prose novels. This is useful for dedicated novel-reading apps or sections where mixing manga and novel rankings would be confusing for users.
 </Tip>
+
+## Response
+
+<ResponseField name="data" type="array">
+  Array of ranked Manga objects. See [Get Manga](/api-reference/manga/get) for the full object schema.
+
+  <Expandable title="Manga object fields (summary)">
+    <ResponseField name="id" type="string">Unique manga identifier.</ResponseField>
+    <ResponseField name="title" type="string">Primary romanized title.</ResponseField>
+    <ResponseField name="type" type="string">Publication type (e.g. `Manga`, `Novel`).</ResponseField>
+    <ResponseField name="chapters" type="integer | null">Total chapter count, or `null` for ongoing series.</ResponseField>
+    <ResponseField name="volumes" type="integer | null">Total volume count, or `null` for ongoing series.</ResponseField>
+    <ResponseField name="status" type="string">Current serialization status.</ResponseField>
+    <ResponseField name="score" type="number">Community score out of 10.</ResponseField>
+    <ResponseField name="rank" type="integer">Global rank by score.</ResponseField>
+    <ResponseField name="popularity" type="integer">Popularity rank based on list adds.</ResponseField>
+    <ResponseField name="synopsis" type="string">Plot summary or series description.</ResponseField>
+    <ResponseField name="genres" type="array">List of genre objects with `id` and `name`.</ResponseField>
+    <ResponseField name="image_url" type="string">URL of the cover image.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination metadata for the current response.
+
+  <Expandable title="Pagination fields">
+    <ResponseField name="current_page" type="integer">The current page number.</ResponseField>
+    <ResponseField name="total_pages" type="integer">Total number of available pages.</ResponseField>
+    <ResponseField name="per_page" type="integer">Number of items per page.</ResponseField>
+    <ResponseField name="total_items" type="integer">Total ranked manga across all pages.</ResponseField>
+    <ResponseField name="has_next_page" type="boolean">`true` if a subsequent page exists.</ResponseField>
+  </Expandable>
+</ResponseField>
 
 ## Example
 

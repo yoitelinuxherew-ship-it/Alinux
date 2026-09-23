@@ -1,7 +1,7 @@
 ---
-title: "Pagination in the Koax Anime API"
+title: "Koax Anime API Pagination: Page, Limit, and Offset Params"
 sidebarTitle: "Pagination"
-description: "Learn how to paginate through large result sets in the Koax Anime API using page and limit query parameters."
+description: "Navigate large anime and manga result sets using page, limit, and offset. Responses include a pagination object with total count and navigation flags."
 ---
 
 The Koax Anime API uses cursor-free, page-based pagination for all list endpoints. Because collections like anime or manga can contain tens of thousands of entries, every list response returns a bounded slice of results alongside a `pagination` metadata object that tells you exactly where you are in the full dataset. You control the slice using two simple query parameters — `page` and `limit` — or use `offset` if you prefer index-based navigation.

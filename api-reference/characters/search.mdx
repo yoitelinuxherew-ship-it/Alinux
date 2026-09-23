@@ -1,7 +1,7 @@
 ---
-title: "GET /characters/search — Search Characters"
+title: "Search Characters by Name — Koax Anime API Reference"
 sidebarTitle: "Search Characters"
-description: "GET /characters/search — Search for anime and manga characters by name, with support for partial matching and pagination."
+description: "Search anime and manga characters by partial or full name, with support for Japanese kanji queries, pagination, and sorting by favorites."
 ---
 
 The **Search Characters** endpoint allows you to find characters by name using partial or full string matching. Results are drawn from both anime and manga titles in the Koax database, making it ideal for powering autocomplete fields, character lookup features, or fan exploration tools. The query is matched against both the romanized name and the original Japanese name.
@@ -36,12 +36,6 @@ GET https://api.koax.dev/v1/characters/search
 <ParamField query="sort" type="string">
   Sort direction. Accepted values: `asc`, `desc`.
 </ParamField>
-
-## Example Request
-
-```
-GET https://api.koax.dev/v1/characters/search?q=sakura
-```
 
 ## Examples
 

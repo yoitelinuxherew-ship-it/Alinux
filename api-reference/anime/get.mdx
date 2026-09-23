@@ -1,7 +1,7 @@
 ---
-title: "GET /anime/:id — Fetch Anime Details"
+title: "Retrieve a Single Anime by ID — Koax API Reference"
 sidebarTitle: "Get Anime"
-description: "GET /anime/:id — Retrieve full details for a single anime by its ID, including genres, studios, aired dates, and trailer."
+description: "Fetch the complete record for one anime by its numeric ID, including synopsis, genres, studios, broadcast dates, cover art, and a trailer link."
 ---
 
 The `/anime/:id` endpoint returns the complete record for a single anime entry. This includes all metadata fields — episode count, scores, rankings, a full synopsis, genre and studio associations, broadcast dates, and links to cover art and trailers. Use this endpoint when you need to render a detail view or enrich a previously listed item.
@@ -110,14 +110,6 @@ GET https://api.koax.dev/v1/anime/:id
 <ResponseField name="trailer_url" type="string">
   URL to the official trailer (usually a YouTube link). `null` if unavailable.
 </ResponseField>
-
-## Example Request
-
-```bash curl
-curl --request GET \
-  --url "https://api.koax.dev/v1/anime/16498" \
-  --header "Authorization: Bearer YOUR_API_KEY"
-```
 
 ## Example Response
 

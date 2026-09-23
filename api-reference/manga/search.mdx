@@ -1,7 +1,7 @@
 ---
-title: "GET /manga/search — Search Manga by Title"
+title: "Search Manga — Query by Keyword, Type, and Filters"
 sidebarTitle: "Search Manga"
-description: "GET /manga/search — Search the manga database by keyword with filters for type, status, year, genre, and score range."
+description: "Search the manga database by keyword with optional filters for publication type, serialization status, release year, genre IDs, and community score range."
 ---
 
 The `/manga/search` endpoint lets you query the manga database using a free-text keyword, with optional filters to narrow results by type, publication status, year, genre, and community score. Results are returned in pages and can be sorted by any supported field. This is the recommended endpoint for building search UIs and discovery features.
@@ -28,6 +28,10 @@ GET https://api.koax.dev/v1/manga/search
 
 <ParamField query="genre_id" type="string">
   Comma-separated list of genre IDs to filter by (e.g. `1,10`). Only manga matching **all** provided genres are returned.
+</ParamField>
+
+<ParamField query="year" type="integer">
+  Filter by publication start year (e.g. `1999`). Returns manga whose serialization began in the given calendar year.
 </ParamField>
 
 <ParamField query="score_min" type="number">
@@ -58,11 +62,36 @@ GET https://api.koax.dev/v1/manga/search
   Search queries are matched against both the English title and the romanized Japanese title (romaji). For example, searching `"one piece"` and `"wan pisu"` will both return the same series. If you're unsure of the exact English translation, try the original romanized Japanese title for more reliable results.
 </Tip>
 
-## Example Request
+## Response
 
-```
-GET https://api.koax.dev/v1/manga/search?q=one+piece&status=publishing
-```
+<ResponseField name="data" type="array">
+  Array of Manga objects matching the search query. See [Get Manga](/api-reference/manga/get) for the full object schema.
+
+  <Expandable title="Manga object fields (summary)">
+    <ResponseField name="id" type="string">Unique manga identifier.</ResponseField>
+    <ResponseField name="title" type="string">Primary romanized title.</ResponseField>
+    <ResponseField name="type" type="string">Publication type (e.g. `Manga`, `One-shot`).</ResponseField>
+    <ResponseField name="chapters" type="integer | null">Total chapter count, or `null` for ongoing series.</ResponseField>
+    <ResponseField name="volumes" type="integer | null">Total volume count, or `null` for ongoing series.</ResponseField>
+    <ResponseField name="status" type="string">Current serialization status.</ResponseField>
+    <ResponseField name="score" type="number">Community score out of 10.</ResponseField>
+    <ResponseField name="rank" type="integer">Global rank by score.</ResponseField>
+    <ResponseField name="popularity" type="integer">Popularity rank based on list adds.</ResponseField>
+    <ResponseField name="image_url" type="string">URL of the cover image.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination metadata for the current response.
+
+  <Expandable title="Pagination fields">
+    <ResponseField name="current_page" type="integer">The current page number.</ResponseField>
+    <ResponseField name="total_pages" type="integer">Total number of available pages.</ResponseField>
+    <ResponseField name="per_page" type="integer">Number of items per page.</ResponseField>
+    <ResponseField name="total_items" type="integer">Total matching results across all pages.</ResponseField>
+    <ResponseField name="has_next_page" type="boolean">`true` if a subsequent page exists.</ResponseField>
+  </Expandable>
+</ResponseField>
 
 ## Example
 

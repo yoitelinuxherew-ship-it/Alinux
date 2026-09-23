@@ -1,7 +1,7 @@
 ---
-title: "GET /anime/top — Top-Rated Anime"
+title: "Browse Top-Ranked Anime — Koax Anime API Reference"
 sidebarTitle: "Top Anime"
-description: "GET /anime/top — Retrieve the top-rated anime ranked by community score, with optional filters for type and time period."
+description: "Retrieve the highest-ranked anime from the Koax database. Choose a ranking mode — score, popularity, favourites, airing, or upcoming — for your use case."
 ---
 
 The `/anime/top` endpoint returns an ordered list of the highest-rated anime in the Koax database, ranked by their weighted community score by default. You can switch the ranking metric to popularity (list additions), favourites (explicit saves), airing status, or upcoming releases using the `filter` parameter — making this endpoint equally useful for "trending now" widgets, genre leaderboards, and personalised recommendation carousels.
@@ -46,6 +46,76 @@ Koax supports four distinct ways to rank anime, each answering a different quest
 - **Favourite** (`favorite`): Counts deliberate "favourite" saves — a stronger signal of genuine love for a series than a passive list add. Useful for surfaces like "most beloved of all time."
 - **Airing / Upcoming** (`airing`, `upcoming`): Scoped leaderboards for currently-broadcasting series and announced-but-not-yet-aired titles. Perfect for a "what's hot this season" widget.
 
+## Response
+
+Each entry in the `data` array includes a `rank` field reflecting its position in the requested ranking mode, alongside core anime metadata.
+
+<ResponseField name="filter" type="string">
+  The ranking mode applied to this response. Reflects the `filter` query parameter, defaulting to `"score"` when omitted.
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  An ordered array of ranked Anime Objects.
+
+  <Expandable title="Ranked Anime Object">
+    <ResponseField name="rank" type="integer">
+      Position in the global ranking for the selected `filter` mode.
+    </ResponseField>
+    <ResponseField name="id" type="integer">
+      Unique numeric identifier for the anime.
+    </ResponseField>
+    <ResponseField name="title" type="string">
+      Primary romanised title.
+    </ResponseField>
+    <ResponseField name="title_english" type="string">
+      Official English title, if available.
+    </ResponseField>
+    <ResponseField name="title_japanese" type="string">
+      Native Japanese title in kanji/kana.
+    </ResponseField>
+    <ResponseField name="type" type="string">
+      Anime format: `TV`, `Movie`, `OVA`, `ONA`, or `Special`.
+    </ResponseField>
+    <ResponseField name="episodes" type="integer">
+      Total episode count. `null` if unknown or currently airing.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Airing status: `airing`, `finished`, or `upcoming`.
+    </ResponseField>
+    <ResponseField name="score" type="number">
+      Community score on a scale of `1.00`–`10.00`.
+    </ResponseField>
+    <ResponseField name="popularity" type="integer">
+      Popularity rank based on the number of users who have added the anime to their list.
+    </ResponseField>
+    <ResponseField name="image_url" type="string">
+      URL to the anime's cover image.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination metadata for the result set.
+
+  <Expandable title="Pagination Object">
+    <ResponseField name="current_page" type="integer">
+      The page number returned.
+    </ResponseField>
+    <ResponseField name="per_page" type="integer">
+      Number of items per page as requested.
+    </ResponseField>
+    <ResponseField name="total_items" type="integer">
+      Total number of anime in the database for the applied ranking and type filter.
+    </ResponseField>
+    <ResponseField name="total_pages" type="integer">
+      Total number of pages available.
+    </ResponseField>
+    <ResponseField name="has_next_page" type="boolean">
+      `true` if a subsequent page exists.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
 ## Example Response
 
 ```json
@@ -54,19 +124,6 @@ Koax supports four distinct ways to rank anime, each answering a different quest
   "data": [
     {
       "rank": 1,
-      "id": 9253,
-      "title": "Steins;Gate",
-      "title_english": "Steins;Gate",
-      "title_japanese": "シュタインズ・ゲート",
-      "type": "TV",
-      "episodes": 24,
-      "status": "finished",
-      "score": 9.08,
-      "popularity": 4,
-      "image_url": "https://cdn.koax.dev/images/anime/9253.jpg"
-    },
-    {
-      "rank": 2,
       "id": 5114,
       "title": "Fullmetal Alchemist: Brotherhood",
       "title_english": "Fullmetal Alchemist: Brotherhood",
@@ -77,6 +134,19 @@ Koax supports four distinct ways to rank anime, each answering a different quest
       "score": 9.11,
       "popularity": 2,
       "image_url": "https://cdn.koax.dev/images/anime/5114.jpg"
+    },
+    {
+      "rank": 2,
+      "id": 9253,
+      "title": "Steins;Gate",
+      "title_english": "Steins;Gate",
+      "title_japanese": "シュタインズ・ゲート",
+      "type": "TV",
+      "episodes": 24,
+      "status": "finished",
+      "score": 9.08,
+      "popularity": 4,
+      "image_url": "https://cdn.koax.dev/images/anime/9253.jpg"
     },
     {
       "rank": 3,

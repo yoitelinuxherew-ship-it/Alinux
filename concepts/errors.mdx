@@ -1,7 +1,7 @@
 ---
-title: "Error Responses and Status Codes"
+title: "Koax Anime API Error Responses, Status Codes, and Handling"
 sidebarTitle: "Errors"
-description: "Reference for all HTTP error codes returned by Koax Anime API, including error object structure and how to handle each error type."
+description: "Every Koax API error returns a structured JSON object. Use this reference for all HTTP status codes, error code constants, and handling strategies."
 ---
 
 The Koax Anime API uses conventional HTTP status codes to signal the outcome of every request. Whenever a request fails, the response body contains a structured `error` object — never a plain text message or an HTML error page — so your application can parse and handle failures programmatically without brittle string matching. The same error shape is used across all endpoints, making it straightforward to write a single, centralized error handler.

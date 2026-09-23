@@ -1,7 +1,7 @@
 ---
-title: "Authenticate with Koax Anime API"
+title: "Koax Anime API Authentication: API Keys & Bearer Tokens"
 sidebarTitle: "Authentication"
-description: "Learn how to authenticate requests to the Koax Anime API using your API key in the Authorization header."
+description: "Learn how to authenticate every request to the Koax Anime API using Bearer token auth, keep your API key secure, and handle authentication errors."
 ---
 
 Every request you send to the Koax Anime API must include a valid API key. Authentication uses the standard HTTP `Authorization` header with the `Bearer` scheme — a widely adopted pattern that works seamlessly with any HTTP client, framework, or language. Without a valid key, the API returns a `401 Unauthorized` error and the request is not processed.

@@ -1,7 +1,7 @@
 ---
-title: "GET /anime/search — Search Anime by Title"
+title: "Search Anime by Title Keyword — Koax API Reference"
 sidebarTitle: "Search Anime"
-description: "GET /anime/search — Search anime by title keyword with optional filters for type, status, year, genre, and score range."
+description: "Perform a keyword search across anime titles. Combine with filters for format, status, season, genre, and score range to return precisely targeted results."
 ---
 
 The `/anime/search` endpoint lets you perform keyword searches against anime titles in the Koax database. Supply a search term via the `q` parameter and optionally combine it with filters for type, airing status, release year, season, genre, and score range to return precisely the results your users are looking for.
@@ -61,6 +61,76 @@ GET https://api.koax.dev/v1/anime/search
 <ParamField query="limit" type="integer" default={25}>
   Number of results per page. Maximum is `50`.
 </ParamField>
+
+## Response
+
+The response wraps results in a `data` array alongside the original query string and standard pagination metadata.
+
+<ResponseField name="query" type="string">
+  The search keyword that was submitted, echoed back for reference.
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  An array of Anime Objects matching the search query and any applied filters.
+
+  <Expandable title="Anime Object">
+    <ResponseField name="id" type="integer">
+      Unique numeric identifier for the anime.
+    </ResponseField>
+    <ResponseField name="title" type="string">
+      Primary romanised title.
+    </ResponseField>
+    <ResponseField name="title_english" type="string">
+      Official English title, if available.
+    </ResponseField>
+    <ResponseField name="title_japanese" type="string">
+      Native Japanese title in kanji/kana.
+    </ResponseField>
+    <ResponseField name="type" type="string">
+      Anime format: `TV`, `Movie`, `OVA`, `ONA`, or `Special`.
+    </ResponseField>
+    <ResponseField name="episodes" type="integer">
+      Total episode count. `null` if unknown or currently airing.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Airing status: `airing`, `finished`, or `upcoming`.
+    </ResponseField>
+    <ResponseField name="score" type="number">
+      Community score on a scale of `1.00`–`10.00`.
+    </ResponseField>
+    <ResponseField name="rank" type="integer">
+      Global rank by score among all anime in the database.
+    </ResponseField>
+    <ResponseField name="popularity" type="integer">
+      Popularity rank based on the number of users who have added the anime to their list.
+    </ResponseField>
+    <ResponseField name="image_url" type="string">
+      URL to the anime's cover image.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination metadata for the result set.
+
+  <Expandable title="Pagination Object">
+    <ResponseField name="current_page" type="integer">
+      The page number returned.
+    </ResponseField>
+    <ResponseField name="per_page" type="integer">
+      Number of items per page as requested.
+    </ResponseField>
+    <ResponseField name="total_items" type="integer">
+      Total number of anime matching the search query and filters.
+    </ResponseField>
+    <ResponseField name="total_pages" type="integer">
+      Total number of pages available.
+    </ResponseField>
+    <ResponseField name="has_next_page" type="boolean">
+      `true` if a subsequent page exists.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
 
 ## Example Request
 
@@ -130,7 +200,7 @@ GET https://api.koax.dev/v1/anime/search?q=attack+on+titan&type=TV&score_min=8.0
 
 ```bash curl
 curl --request GET \
-  --url "https://api.koax.dev/v1/anime/search?q=attack%2Bon%2Btitan&type=TV&score_min=8.0" \
+  --url "https://api.koax.dev/v1/anime/search?q=attack%20on%20titan&type=TV&score_min=8.0" \
   --header "Authorization: Bearer YOUR_API_KEY"
 ```
 

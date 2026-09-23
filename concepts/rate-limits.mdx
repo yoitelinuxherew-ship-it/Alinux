@@ -1,7 +1,7 @@
 ---
-title: "API Rate Limits and Usage Quotas"
+title: "Koax Anime API Rate Limits, Quotas, and Usage Headers"
 sidebarTitle: "Rate Limits"
-description: "Understand Koax Anime API rate limits, response headers for tracking usage, and best practices to avoid hitting limits."
+description: "Learn the request limits for each Koax plan, how to read X-RateLimit headers, and how to implement retry logic that respects the 429 response."
 ---
 
 Every plan on the Koax Anime API comes with a rate limit that governs how many requests you can make per minute and per day. These limits exist to keep the service fast and reliable for everyone. When you exceed a limit, the API returns a `429 RATE_LIMITED` error and tells you exactly how long to wait before retrying. This page covers the limits for each plan, how to read the rate-limit headers on every response, and patterns for staying well under your quota.
